@@ -1,0 +1,801 @@
+{
+  "problemId": "ce_8004",
+  "globalParameters": {
+    "vehicleCapacity": 400,
+    "numberOfCustomers": 10,
+    "numberOfCarriers": 2
+  },
+  "fleets": [
+    {
+      "carrierId": "1",
+      "depotLocationId": "11"
+    },
+    {
+      "carrierId": "2",
+      "depotLocationId": "12"
+    }
+  ],
+  "customers": [
+    {
+      "id": "1",
+      "deliveryDemandByCarrier": {
+        "2": 16
+      },
+      "pickupDemandByCarrier": {
+        "2": 17
+      },
+      "allowedCarriers": [
+        "2"
+      ]
+    },
+    {
+      "id": "2",
+      "deliveryDemandByCarrier": {
+        "2": 13
+      },
+      "pickupDemandByCarrier": {
+        "2": 15
+      },
+      "allowedCarriers": [
+        "2"
+      ]
+    },
+    {
+      "id": "3",
+      "deliveryDemandByCarrier": {
+        "1": 12
+      },
+      "pickupDemandByCarrier": {
+        "1": 12
+      },
+      "allowedCarriers": [
+        "1"
+      ]
+    },
+    {
+      "id": "4",
+      "deliveryDemandByCarrier": {
+        "1": 23,
+        "2": 19
+      },
+      "pickupDemandByCarrier": {
+        "1": 12,
+        "2": 13
+      },
+      "allowedCarriers": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "id": "5",
+      "deliveryDemandByCarrier": {
+        "1": 12
+      },
+      "pickupDemandByCarrier": {
+        "1": 19
+      },
+      "allowedCarriers": [
+        "1"
+      ]
+    },
+    {
+      "id": "6",
+      "deliveryDemandByCarrier": {
+        "2": 19
+      },
+      "pickupDemandByCarrier": {
+        "2": 113
+      },
+      "allowedCarriers": [
+        "2"
+      ]
+    },
+    {
+      "id": "7",
+      "deliveryDemandByCarrier": {
+        "1": 18
+      },
+      "pickupDemandByCarrier": {
+        "1": 13
+      },
+      "allowedCarriers": [
+        "1"
+      ]
+    },
+    {
+      "id": "8",
+      "deliveryDemandByCarrier": {
+        "1": 11
+      },
+      "pickupDemandByCarrier": {
+        "1": 16
+      },
+      "allowedCarriers": [
+        "1"
+      ]
+    },
+    {
+      "id": "9",
+      "deliveryDemandByCarrier": {
+        "1": 12,
+        "2": 13
+      },
+      "pickupDemandByCarrier": {
+        "1": 12,
+        "2": 23
+      },
+      "allowedCarriers": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "id": "10",
+      "deliveryDemandByCarrier": {
+        "1": 16,
+        "2": 11
+      },
+      "pickupDemandByCarrier": {
+        "1": 16,
+        "2": 14
+      },
+      "allowedCarriers": [
+        "1",
+        "2"
+      ]
+    }
+  ],
+  "costMatrix": [
+    {
+      "from": 1,
+      "to": 2,
+      "cost": 60.21
+    },
+    {
+      "from": 1,
+      "to": 3,
+      "cost": 55.23
+    },
+    {
+      "from": 1,
+      "to": 4,
+      "cost": 97.1
+    },
+    {
+      "from": 1,
+      "to": 5,
+      "cost": 56.29
+    },
+    {
+      "from": 1,
+      "to": 6,
+      "cost": 83.1
+    },
+    {
+      "from": 1,
+      "to": 7,
+      "cost": 112.43
+    },
+    {
+      "from": 1,
+      "to": 8,
+      "cost": 4.12
+    },
+    {
+      "from": 1,
+      "to": 9,
+      "cost": 92.7
+    },
+    {
+      "from": 1,
+      "to": 10,
+      "cost": 87.11
+    },
+    {
+      "from": 1,
+      "to": 11,
+      "cost": 129.45
+    },
+    {
+      "from": 1,
+      "to": 12,
+      "cost": 12.53
+    },
+    {
+      "from": 2,
+      "to": 1,
+      "cost": 60.21
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "cost": 42.72
+    },
+    {
+      "from": 2,
+      "to": 4,
+      "cost": 38.9
+    },
+    {
+      "from": 2,
+      "to": 5,
+      "cost": 29.73
+    },
+    {
+      "from": 2,
+      "to": 6,
+      "cost": 25.3
+    },
+    {
+      "from": 2,
+      "to": 7,
+      "cost": 52.4
+    },
+    {
+      "from": 2,
+      "to": 8,
+      "cost": 63.66
+    },
+    {
+      "from": 2,
+      "to": 9,
+      "cost": 42.76
+    },
+    {
+      "from": 2,
+      "to": 10,
+      "cost": 28.18
+    },
+    {
+      "from": 2,
+      "to": 11,
+      "cost": 69.3
+    },
+    {
+      "from": 2,
+      "to": 12,
+      "cost": 72.12
+    },
+    {
+      "from": 3,
+      "to": 1,
+      "cost": 55.23
+    },
+    {
+      "from": 3,
+      "to": 2,
+      "cost": 42.72
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "cost": 77.06
+    },
+    {
+      "from": 3,
+      "to": 5,
+      "cost": 65.95
+    },
+    {
+      "from": 3,
+      "to": 6,
+      "cost": 48.84
+    },
+    {
+      "from": 3,
+      "to": 7,
+      "cost": 78.75
+    },
+    {
+      "from": 3,
+      "to": 8,
+      "cost": 59.3
+    },
+    {
+      "from": 3,
+      "to": 9,
+      "cost": 85.16
+    },
+    {
+      "from": 3,
+      "to": 10,
+      "cost": 53.94
+    },
+    {
+      "from": 3,
+      "to": 11,
+      "cost": 95.27
+    },
+    {
+      "from": 3,
+      "to": 12,
+      "cost": 66.91
+    },
+    {
+      "from": 4,
+      "to": 1,
+      "cost": 97.1
+    },
+    {
+      "from": 4,
+      "to": 2,
+      "cost": 38.9
+    },
+    {
+      "from": 4,
+      "to": 3,
+      "cost": 77.06
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "cost": 48.26
+    },
+    {
+      "from": 4,
+      "to": 6,
+      "cost": 31.38
+    },
+    {
+      "from": 4,
+      "to": 7,
+      "cost": 27.07
+    },
+    {
+      "from": 4,
+      "to": 8,
+      "cost": 100.12
+    },
+    {
+      "from": 4,
+      "to": 9,
+      "cost": 20.62
+    },
+    {
+      "from": 4,
+      "to": 10,
+      "cost": 27.29
+    },
+    {
+      "from": 4,
+      "to": 11,
+      "cost": 38.9
+    },
+    {
+      "from": 4,
+      "to": 12,
+      "cost": 108.23
+    },
+    {
+      "from": 5,
+      "to": 1,
+      "cost": 56.29
+    },
+    {
+      "from": 5,
+      "to": 2,
+      "cost": 29.73
+    },
+    {
+      "from": 5,
+      "to": 3,
+      "cost": 65.95
+    },
+    {
+      "from": 5,
+      "to": 4,
+      "cost": 48.26
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "cost": 52.04
+    },
+    {
+      "from": 5,
+      "to": 7,
+      "cost": 71.51
+    },
+    {
+      "from": 5,
+      "to": 8,
+      "cost": 58.24
+    },
+    {
+      "from": 5,
+      "to": 9,
+      "cost": 37.74
+    },
+    {
+      "from": 5,
+      "to": 10,
+      "cost": 53.08
+    },
+    {
+      "from": 5,
+      "to": 11,
+      "cost": 86.31
+    },
+    {
+      "from": 5,
+      "to": 12,
+      "cost": 65.19
+    },
+    {
+      "from": 6,
+      "to": 1,
+      "cost": 83.1
+    },
+    {
+      "from": 6,
+      "to": 2,
+      "cost": 25.3
+    },
+    {
+      "from": 6,
+      "to": 3,
+      "cost": 48.84
+    },
+    {
+      "from": 6,
+      "to": 4,
+      "cost": 31.38
+    },
+    {
+      "from": 6,
+      "to": 5,
+      "cost": 52.04
+    },
+    {
+      "from": 6,
+      "to": 7,
+      "cost": 30.89
+    },
+    {
+      "from": 6,
+      "to": 8,
+      "cost": 86.83
+    },
+    {
+      "from": 6,
+      "to": 9,
+      "cost": 46.69
+    },
+    {
+      "from": 6,
+      "to": 10,
+      "cost": 5.1
+    },
+    {
+      "from": 6,
+      "to": 11,
+      "cost": 48.02
+    },
+    {
+      "from": 6,
+      "to": 12,
+      "cost": 95.43
+    },
+    {
+      "from": 7,
+      "to": 1,
+      "cost": 112.43
+    },
+    {
+      "from": 7,
+      "to": 2,
+      "cost": 52.4
+    },
+    {
+      "from": 7,
+      "to": 3,
+      "cost": 78.75
+    },
+    {
+      "from": 7,
+      "to": 4,
+      "cost": 27.07
+    },
+    {
+      "from": 7,
+      "to": 5,
+      "cost": 71.51
+    },
+    {
+      "from": 7,
+      "to": 6,
+      "cost": 30.89
+    },
+    {
+      "from": 7,
+      "to": 8,
+      "cost": 115.97
+    },
+    {
+      "from": 7,
+      "to": 9,
+      "cost": 47.52
+    },
+    {
+      "from": 7,
+      "to": 10,
+      "cost": 26.08
+    },
+    {
+      "from": 7,
+      "to": 11,
+      "cost": 17.2
+    },
+    {
+      "from": 7,
+      "to": 12,
+      "cost": 124.48
+    },
+    {
+      "from": 8,
+      "to": 1,
+      "cost": 4.12
+    },
+    {
+      "from": 8,
+      "to": 2,
+      "cost": 63.66
+    },
+    {
+      "from": 8,
+      "to": 3,
+      "cost": 59.3
+    },
+    {
+      "from": 8,
+      "to": 4,
+      "cost": 100.12
+    },
+    {
+      "from": 8,
+      "to": 5,
+      "cost": 58.24
+    },
+    {
+      "from": 8,
+      "to": 6,
+      "cost": 86.83
+    },
+    {
+      "from": 8,
+      "to": 7,
+      "cost": 115.97
+    },
+    {
+      "from": 8,
+      "to": 9,
+      "cost": 95.08
+    },
+    {
+      "from": 8,
+      "to": 10,
+      "cost": 90.79
+    },
+    {
+      "from": 8,
+      "to": 11,
+      "cost": 132.94
+    },
+    {
+      "from": 8,
+      "to": 12,
+      "cost": 8.6
+    },
+    {
+      "from": 9,
+      "to": 1,
+      "cost": 92.7
+    },
+    {
+      "from": 9,
+      "to": 2,
+      "cost": 42.76
+    },
+    {
+      "from": 9,
+      "to": 3,
+      "cost": 85.16
+    },
+    {
+      "from": 9,
+      "to": 4,
+      "cost": 20.62
+    },
+    {
+      "from": 9,
+      "to": 5,
+      "cost": 37.74
+    },
+    {
+      "from": 9,
+      "to": 6,
+      "cost": 46.69
+    },
+    {
+      "from": 9,
+      "to": 7,
+      "cost": 47.52
+    },
+    {
+      "from": 9,
+      "to": 8,
+      "cost": 95.08
+    },
+    {
+      "from": 9,
+      "to": 10,
+      "cost": 43.93
+    },
+    {
+      "from": 9,
+      "to": 11,
+      "cost": 57.43
+    },
+    {
+      "from": 9,
+      "to": 12,
+      "cost": 102.46
+    },
+    {
+      "from": 10,
+      "to": 1,
+      "cost": 87.11
+    },
+    {
+      "from": 10,
+      "to": 2,
+      "cost": 28.18
+    },
+    {
+      "from": 10,
+      "to": 3,
+      "cost": 53.94
+    },
+    {
+      "from": 10,
+      "to": 4,
+      "cost": 27.29
+    },
+    {
+      "from": 10,
+      "to": 5,
+      "cost": 53.08
+    },
+    {
+      "from": 10,
+      "to": 6,
+      "cost": 5.1
+    },
+    {
+      "from": 10,
+      "to": 7,
+      "cost": 26.08
+    },
+    {
+      "from": 10,
+      "to": 8,
+      "cost": 90.79
+    },
+    {
+      "from": 10,
+      "to": 9,
+      "cost": 43.93
+    },
+    {
+      "from": 10,
+      "to": 11,
+      "cost": 43.27
+    },
+    {
+      "from": 10,
+      "to": 12,
+      "cost": 99.36
+    },
+    {
+      "from": 11,
+      "to": 1,
+      "cost": 129.45
+    },
+    {
+      "from": 11,
+      "to": 2,
+      "cost": 69.3
+    },
+    {
+      "from": 11,
+      "to": 3,
+      "cost": 95.27
+    },
+    {
+      "from": 11,
+      "to": 4,
+      "cost": 38.9
+    },
+    {
+      "from": 11,
+      "to": 5,
+      "cost": 86.31
+    },
+    {
+      "from": 11,
+      "to": 6,
+      "cost": 48.02
+    },
+    {
+      "from": 11,
+      "to": 7,
+      "cost": 17.2
+    },
+    {
+      "from": 11,
+      "to": 8,
+      "cost": 132.94
+    },
+    {
+      "from": 11,
+      "to": 9,
+      "cost": 57.43
+    },
+    {
+      "from": 11,
+      "to": 10,
+      "cost": 43.27
+    },
+    {
+      "from": 12,
+      "to": 1,
+      "cost": 12.53
+    },
+    {
+      "from": 12,
+      "to": 2,
+      "cost": 72.12
+    },
+    {
+      "from": 12,
+      "to": 3,
+      "cost": 66.91
+    },
+    {
+      "from": 12,
+      "to": 4,
+      "cost": 108.23
+    },
+    {
+      "from": 12,
+      "to": 5,
+      "cost": 65.19
+    },
+    {
+      "from": 12,
+      "to": 6,
+      "cost": 95.43
+    },
+    {
+      "from": 12,
+      "to": 7,
+      "cost": 124.48
+    },
+    {
+      "from": 12,
+      "to": 8,
+      "cost": 8.6
+    },
+    {
+      "from": 12,
+      "to": 9,
+      "cost": 102.46
+    },
+    {
+      "from": 12,
+      "to": 10,
+      "cost": 99.36
+    }
+  ]
+}
