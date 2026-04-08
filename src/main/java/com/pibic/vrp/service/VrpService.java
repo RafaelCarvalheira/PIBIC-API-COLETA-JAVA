@@ -40,7 +40,17 @@ public class VrpService {
 
     /**
      * Resolve o problema CE COM restricao C8 (cada cliente visitado exatamente uma vez).
-     * Modelagem igual ao modelo exato em Julia.
+     * Modelagem equivalente ao modelo exato em Julia (run_CE).
+     *
+     * Usa jobs Delivery+Pickup separados para modelar corretamente a capacidade
+     * em problemas com coleta e entrega simultanea (VRPSPD):
+     * - Delivery: veiculo sai carregado do deposito, descarrega no cliente (carga diminui)
+     * - Pickup: veiculo coleta no cliente (carga aumenta)
+     * - Capacidade verificada em cada ponto: (entregas restantes + coletas realizadas) <= capacidade
+     *
+     * C8 eh garantida por construcao: cada cliente tem exatamente 1 job Delivery e 1 job Pickup
+     * (com demandas somadas de ambos carriers), e SameVehicleConstraint garante que ambos
+     * fiquem no mesmo veiculo.
      */
     public VrpSolution solveWithC8(VrpInput input, String mode) {
         customerDeliveryDemands.clear();
@@ -139,7 +149,10 @@ public class VrpService {
             }
         }
 
-        // 4. Customers - COM RESTRICAO C8
+        // 4. Mapa de jobs relacionados (Delivery <-> Pickup do mesmo cliente)
+        Map<String, String> relatedJobs = new HashMap<>();
+
+        // 5. Customers - COM RESTRICAO C8 usando Delivery+Pickup separados
         if (input.getCustomers() != null) {
             for (Customer customer : input.getCustomers()) {
                 String customerId = String.valueOf(customer.getId());
@@ -165,19 +178,32 @@ public class VrpService {
                     customerDeliveryDemands.put(customerId, totalDelivery);
                     customerPickupDemands.put(customerId, totalPickup);
 
-                    int serviceDemand = Math.max(totalDelivery, totalPickup);
+                    String dJobId = "d_" + customerId;
+                    String pJobId = "p_" + customerId;
 
-                    if (serviceDemand > 0) {
-                        com.graphhopper.jsprit.core.problem.job.Service.Builder serviceBuilder =
-                                com.graphhopper.jsprit.core.problem.job.Service.Builder.newInstance("service_" + customerId)
-                                .addSizeDimension(0, serviceDemand)
-                                .setLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(customerId));
-
+                    if (totalDelivery > 0) {
+                        Delivery.Builder builder = Delivery.Builder.newInstance(dJobId);
+                        builder.addSizeDimension(0, totalDelivery);
+                        builder.setLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(customerId));
                         if (!isSharedCustomer && carriersForCustomer.size() == 1) {
-                            serviceBuilder.addRequiredSkill(carriersForCustomer.iterator().next());
+                            builder.addRequiredSkill(carriersForCustomer.iterator().next());
                         }
+                        vrpBuilder.addJob(builder.build());
+                    }
 
-                        vrpBuilder.addJob(serviceBuilder.build());
+                    if (totalPickup > 0) {
+                        Pickup.Builder builder = Pickup.Builder.newInstance(pJobId);
+                        builder.addSizeDimension(0, totalPickup);
+                        builder.setLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(customerId));
+                        if (!isSharedCustomer && carriersForCustomer.size() == 1) {
+                            builder.addRequiredSkill(carriersForCustomer.iterator().next());
+                        }
+                        vrpBuilder.addJob(builder.build());
+                    }
+
+                    if (totalDelivery > 0 && totalPickup > 0) {
+                        relatedJobs.put(dJobId, pJobId);
+                        relatedJobs.put(pJobId, dJobId);
                     }
                 } else {
                     String targetCarrier = "CE_A".equals(mode) ? "1" : "2";
@@ -191,16 +217,28 @@ public class VrpService {
                     customerDeliveryDemands.put(customerId, carrierDeliveryDemand);
                     customerPickupDemands.put(customerId, carrierPickupDemand);
 
-                    int serviceDemand = Math.max(carrierDeliveryDemand, carrierPickupDemand);
+                    String dJobId = "d_" + customerId;
+                    String pJobId = "p_" + customerId;
 
-                    if (serviceDemand > 0) {
-                        com.graphhopper.jsprit.core.problem.job.Service.Builder serviceBuilder =
-                                com.graphhopper.jsprit.core.problem.job.Service.Builder.newInstance("service_" + customerId)
-                                .addSizeDimension(0, serviceDemand)
-                                .setLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(customerId))
-                                .addRequiredSkill(targetCarrier);
+                    if (carrierDeliveryDemand > 0) {
+                        Delivery.Builder builder = Delivery.Builder.newInstance(dJobId);
+                        builder.addSizeDimension(0, carrierDeliveryDemand);
+                        builder.setLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(customerId));
+                        builder.addRequiredSkill(targetCarrier);
+                        vrpBuilder.addJob(builder.build());
+                    }
 
-                        vrpBuilder.addJob(serviceBuilder.build());
+                    if (carrierPickupDemand > 0) {
+                        Pickup.Builder builder = Pickup.Builder.newInstance(pJobId);
+                        builder.addSizeDimension(0, carrierPickupDemand);
+                        builder.setLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(customerId));
+                        builder.addRequiredSkill(targetCarrier);
+                        vrpBuilder.addJob(builder.build());
+                    }
+
+                    if (carrierDeliveryDemand > 0 && carrierPickupDemand > 0) {
+                        relatedJobs.put(dJobId, pJobId);
+                        relatedJobs.put(pJobId, dJobId);
                     }
                 }
             }
@@ -210,7 +248,20 @@ public class VrpService {
 
         VehicleRoutingProblem problem = vrpBuilder.build();
 
-        VehicleRoutingProblemSolution bestSolution = solveWithMultiStart(problem, 10);
+        // 6. StateManager e ConstraintManager com SameVehicleConstraint
+        com.graphhopper.jsprit.core.algorithm.state.StateManager stateManager =
+                new com.graphhopper.jsprit.core.algorithm.state.StateManager(problem);
+
+        com.graphhopper.jsprit.core.problem.constraint.ConstraintManager constraintManager =
+                new com.graphhopper.jsprit.core.problem.constraint.ConstraintManager(problem, stateManager);
+
+        SameVehicleConstraint sameVehicleConstraint = new SameVehicleConstraint(relatedJobs);
+        constraintManager.addConstraint(sameVehicleConstraint);
+
+        stateManager.addStateUpdater(new SameVehicleConstraint.JobAssignmentUpdater(
+                sameVehicleConstraint.getJobToVehicleMap()));
+
+        VehicleRoutingProblemSolution bestSolution = solveWithConstraintMultiStart(problem, stateManager, constraintManager, 10, true);
 
         return mapSolutionC8(bestSolution, input.getProblemId(), problem);
     }
@@ -380,7 +431,8 @@ public class VrpService {
             VehicleRoutingProblem problem,
             com.graphhopper.jsprit.core.algorithm.state.StateManager stateManager,
             com.graphhopper.jsprit.core.problem.constraint.ConstraintManager constraintManager,
-            int numStarts) {
+            int numStarts,
+            boolean allowVehicleSwitch) {
 
         VehicleRoutingProblemSolution bestSolution = null;
         double bestCost = Double.MAX_VALUE;
@@ -389,7 +441,7 @@ public class VrpService {
             VehicleRoutingAlgorithm algorithm = Jsprit.Builder.newInstance(problem)
                     .setStateAndConstraintManager(stateManager, constraintManager)
                     .setProperty(Jsprit.Parameter.THREADS, "4")
-                    .setProperty(Jsprit.Parameter.VEHICLE_SWITCH, "false")
+                    .setProperty(Jsprit.Parameter.VEHICLE_SWITCH, String.valueOf(allowVehicleSwitch))
                     .setProperty(Jsprit.Parameter.FAST_REGRET, "false")
                     .setRandom(new Random(seed * 1000 + 42))
                     .buildAlgorithm();
@@ -409,66 +461,66 @@ public class VrpService {
     }
 
     /**
+     * Overload para manter compatibilidade: VEHICLE_SWITCH=false por padrao (usado pelo ce-custom).
+     */
+    private VehicleRoutingProblemSolution solveWithConstraintMultiStart(
+            VehicleRoutingProblem problem,
+            com.graphhopper.jsprit.core.algorithm.state.StateManager stateManager,
+            com.graphhopper.jsprit.core.problem.constraint.ConstraintManager constraintManager,
+            int numStarts) {
+        return solveWithConstraintMultiStart(problem, stateManager, constraintManager, numStarts, false);
+    }
+
+    /**
      * Mapeia a solucao do Jsprit para o modelo de resposta (versao C8).
+     * Usa tipos de atividade reais (DeliveryActivity/PickupActivity) do Jsprit
+     * e o custo calculado pelo solver.
      */
     private VrpSolution mapSolutionC8(VehicleRoutingProblemSolution solution, String problemId,
                                                 VehicleRoutingProblem problem) {
+        if (solution == null) {
+            return VrpSolution.builder()
+                    .problemId(problemId)
+                    .totalCost(0.0)
+                    .routes(Collections.emptyList())
+                    .status("COMPLETED")
+                    .message("CE-C8 - No Solution")
+                    .build();
+        }
+
         List<RouteDTO> routes = new ArrayList<>();
-        double totalCost = 0.0;
 
-        if (solution != null) {
-            for (VehicleRoute route : solution.getRoutes()) {
-                List<String> activities = new ArrayList<>();
-                String depotId = route.getStart().getLocation().getId();
+        for (VehicleRoute route : solution.getRoutes()) {
+            if (route.isEmpty()) continue;
 
-                activities.add("START-" + depotId);
+            String vehicleId = route.getVehicle().getId();
+            String depotId = route.getStart().getLocation().getId();
 
-                List<String> customerLocations = new ArrayList<>();
+            List<String> activities = new ArrayList<>();
+            activities.add("START-" + depotId);
 
-                for (TourActivity activity : route.getActivities()) {
-                    String locId = activity.getLocation().getId();
-                    if (!customerLocations.contains(locId)) {
-                        customerLocations.add(locId);
-                    }
-                }
-
-                List<String> optimizedLocations = new ArrayList<>(customerLocations);
-                double routeCost = calculateRouteCost(optimizedLocations, depotId, problem, route.getVehicle());
-
-                for (String locId : optimizedLocations) {
-                    int deliveryDemand = customerDeliveryDemands.getOrDefault(locId, 0);
-                    int pickupDemand = customerPickupDemands.getOrDefault(locId, 0);
-
-                    if (deliveryDemand > 0) {
-                        activities.add("DELIVERY:" + locId);
-                    }
-                    if (pickupDemand > 0) {
-                        activities.add("PICKUP:" + locId);
-                    }
-                    if (deliveryDemand == 0 && pickupDemand == 0) {
-                        activities.add("SERVICE:" + locId);
-                    }
-                }
-
-                activities.add("END-" + depotId);
-
-                totalCost += routeCost;
-
-                routes.add(RouteDTO.builder()
-                        .vehicleId(route.getVehicle().getId())
-                        .routeCost(routeCost)
-                        .activitySequence(activities)
-                        .build());
+            for (TourActivity activity : route.getActivities()) {
+                String locationId = activity.getLocation().getId();
+                String type = "VISIT";
+                if (activity instanceof DeliveryActivity) type = "DELIVERY";
+                else if (activity instanceof PickupActivity) type = "PICKUP";
+                activities.add(type + ":" + locationId);
             }
+
+            activities.add("END-" + depotId);
+
+            routes.add(RouteDTO.builder()
+                    .vehicleId(vehicleId)
+                    .activitySequence(activities)
+                    .build());
         }
 
         return VrpSolution.builder()
                 .problemId(problemId)
-                .totalCost(totalCost)
+                .totalCost(solution.getCost())
                 .routes(routes)
                 .status("COMPLETED")
-                .message(solution != null ?
-                        "CE-C8 - Unassigned Jobs: " + solution.getUnassignedJobs().size() : "No Solution")
+                .message("CE-C8 - Unassigned Jobs: " + solution.getUnassignedJobs().size())
                 .build();
     }
 

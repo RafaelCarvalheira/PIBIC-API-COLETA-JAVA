@@ -1,0 +1,119 @@
+{
+  "problemId": "ce_8016",
+  "totalCost": 1242.62,
+  "routes": [
+    {
+      "vehicleId": "vehicle_1",
+      "activitySequence": [
+        "START-26",
+        "DELIVERY:10",
+        "PICKUP:10",
+        "PICKUP:22",
+        "DELIVERY:22",
+        "PICKUP:21",
+        "DELIVERY:21",
+        "DELIVERY:11",
+        "PICKUP:11",
+        "DELIVERY:2",
+        "PICKUP:2",
+        "DELIVERY:3",
+        "PICKUP:3",
+        "DELIVERY:5",
+        "PICKUP:5",
+        "DELIVERY:1",
+        "PICKUP:1",
+        "END-26"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_1",
+      "activitySequence": [
+        "START-26",
+        "PICKUP:14",
+        "DELIVERY:14",
+        "DELIVERY:15",
+        "PICKUP:15",
+        "DELIVERY:19",
+        "PICKUP:19",
+        "DELIVERY:9",
+        "PICKUP:9",
+        "PICKUP:20",
+        "DELIVERY:20",
+        "END-26"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_1",
+      "activitySequence": [
+        "START-26",
+        "PICKUP:17",
+        "DELIVERY:17",
+        "PICKUP:23",
+        "DELIVERY:23",
+        "PICKUP:4",
+        "DELIVERY:4",
+        "END-26"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_2",
+      "activitySequence": [
+        "START-27",
+        "DELIVERY:8",
+        "PICKUP:8",
+        "DELIVERY:7",
+        "PICKUP:7",
+        "DELIVERY:19",
+        "PICKUP:19",
+        "DELIVERY:6",
+        "PICKUP:6",
+        "DELIVERY:25",
+        "PICKUP:25",
+        "DELIVERY:24",
+        "PICKUP:24",
+        "DELIVERY:12",
+        "PICKUP:12",
+        "END-27"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_2",
+      "activitySequence": [
+        "START-27",
+        "DELIVERY:21",
+        "PICKUP:21",
+        "DELIVERY:11",
+        "PICKUP:11",
+        "DELIVERY:13",
+        "PICKUP:13",
+        "DELIVERY:1",
+        "PICKUP:1",
+        "DELIVERY:23",
+        "PICKUP:23",
+        "DELIVERY:16",
+        "PICKUP:16",
+        "DELIVERY:2",
+        "PICKUP:2",
+        "END-27"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_2",
+      "activitySequence": [
+        "START-27",
+        "PICKUP:18",
+        "DELIVERY:18",
+        "END-27"
+      ],
+      "routeCost": 0.0
+    }
+  ],
+  "status": null,
+  "message": "CE-Custom NoShare - Custo A: 626.3199999999999 | Custo B: 616.3",
+  "execution_time": 22.19
+}

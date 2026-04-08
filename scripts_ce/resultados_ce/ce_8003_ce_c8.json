@@ -1,0 +1,45 @@
+{
+  "problemId": "ce_8003",
+  "totalCost": 537.33,
+  "routes": [
+    {
+      "vehicleId": "vehicle_1",
+      "activitySequence": [
+        "START-11",
+        "DELIVERY:6",
+        "PICKUP:6",
+        "DELIVERY:9",
+        "PICKUP:9",
+        "PICKUP:3",
+        "DELIVERY:3",
+        "PICKUP:8",
+        "DELIVERY:8",
+        "PICKUP:2",
+        "DELIVERY:2",
+        "END-11"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_2",
+      "activitySequence": [
+        "START-12",
+        "DELIVERY:5",
+        "PICKUP:5",
+        "PICKUP:7",
+        "DELIVERY:7",
+        "PICKUP:10",
+        "DELIVERY:10",
+        "PICKUP:1",
+        "DELIVERY:1",
+        "DELIVERY:4",
+        "PICKUP:4",
+        "END-12"
+      ],
+      "routeCost": 0.0
+    }
+  ],
+  "status": "COMPLETED",
+  "message": "CE-C8 - Unassigned Jobs: 0",
+  "execution_time": 8.74
+}

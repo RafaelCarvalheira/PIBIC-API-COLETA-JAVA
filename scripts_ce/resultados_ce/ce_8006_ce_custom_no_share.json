@@ -1,0 +1,71 @@
+{
+  "problemId": "ce_8006",
+  "totalCost": 755.1800000000001,
+  "routes": [
+    {
+      "vehicleId": "vehicle_1",
+      "activitySequence": [
+        "START-16",
+        "PICKUP:3",
+        "DELIVERY:3",
+        "PICKUP:5",
+        "DELIVERY:5",
+        "PICKUP:15",
+        "DELIVERY:15",
+        "PICKUP:2",
+        "DELIVERY:2",
+        "DELIVERY:8",
+        "PICKUP:8",
+        "DELIVERY:14",
+        "PICKUP:14",
+        "END-16"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_1",
+      "activitySequence": [
+        "START-16",
+        "PICKUP:12",
+        "DELIVERY:12",
+        "PICKUP:11",
+        "DELIVERY:11",
+        "PICKUP:7",
+        "DELIVERY:7",
+        "PICKUP:6",
+        "DELIVERY:6",
+        "PICKUP:13",
+        "DELIVERY:13",
+        "PICKUP:10",
+        "DELIVERY:10",
+        "PICKUP:9",
+        "DELIVERY:9",
+        "END-16"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_2",
+      "activitySequence": [
+        "START-17",
+        "DELIVERY:2",
+        "PICKUP:2",
+        "DELIVERY:5",
+        "PICKUP:5",
+        "PICKUP:1",
+        "DELIVERY:1",
+        "PICKUP:10",
+        "DELIVERY:10",
+        "PICKUP:4",
+        "DELIVERY:4",
+        "DELIVERY:14",
+        "PICKUP:14",
+        "END-17"
+      ],
+      "routeCost": 0.0
+    }
+  ],
+  "status": null,
+  "message": "CE-Custom NoShare - Custo A: 527.98 | Custo B: 227.2",
+  "execution_time": 11.72
+}

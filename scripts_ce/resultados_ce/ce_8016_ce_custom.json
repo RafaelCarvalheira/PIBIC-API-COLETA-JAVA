@@ -1,0 +1,111 @@
+{
+  "problemId": "ce_8016",
+  "totalCost": 1143.1499999999999,
+  "routes": [
+    {
+      "vehicleId": "vehicle_2",
+      "activitySequence": [
+        "START-27",
+        "DELIVERY:8",
+        "PICKUP:8",
+        "DELIVERY:7",
+        "PICKUP:7",
+        "DELIVERY:6",
+        "PICKUP:6",
+        "DELIVERY:25",
+        "PICKUP:25",
+        "DELIVERY:24",
+        "PICKUP:24",
+        "DELIVERY:13",
+        "PICKUP:13",
+        "DELIVERY:12",
+        "PICKUP:12",
+        "END-27"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_1",
+      "activitySequence": [
+        "START-26",
+        "PICKUP:5",
+        "DELIVERY:5",
+        "PICKUP:3",
+        "DELIVERY:3",
+        "DELIVERY:2",
+        "DELIVERY:2",
+        "PICKUP:2",
+        "PICKUP:2",
+        "PICKUP:22",
+        "DELIVERY:22",
+        "DELIVERY:10",
+        "PICKUP:10",
+        "END-26"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_1",
+      "activitySequence": [
+        "START-26",
+        "DELIVERY:20",
+        "PICKUP:20",
+        "DELIVERY:9",
+        "PICKUP:9",
+        "DELIVERY:19",
+        "DELIVERY:19",
+        "PICKUP:19",
+        "PICKUP:19",
+        "DELIVERY:15",
+        "PICKUP:15",
+        "DELIVERY:14",
+        "PICKUP:14",
+        "END-26"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_1",
+      "activitySequence": [
+        "START-26",
+        "DELIVERY:4",
+        "PICKUP:4",
+        "PICKUP:1",
+        "DELIVERY:1",
+        "DELIVERY:1",
+        "PICKUP:1",
+        "PICKUP:23",
+        "DELIVERY:23",
+        "PICKUP:23",
+        "DELIVERY:23",
+        "DELIVERY:17",
+        "PICKUP:17",
+        "END-26"
+      ],
+      "routeCost": 0.0
+    },
+    {
+      "vehicleId": "vehicle_2",
+      "activitySequence": [
+        "START-27",
+        "PICKUP:16",
+        "DELIVERY:16",
+        "PICKUP:11",
+        "PICKUP:11",
+        "DELIVERY:11",
+        "DELIVERY:11",
+        "PICKUP:21",
+        "DELIVERY:21",
+        "DELIVERY:21",
+        "PICKUP:21",
+        "PICKUP:18",
+        "DELIVERY:18",
+        "END-27"
+      ],
+      "routeCost": 0.0
+    }
+  ],
+  "status": "COMPLETED",
+  "message": "CE-Custom Multi-Start | Unassigned: 0 | Clientes compartilhados: 6 | Visitas (1x: 25, 2x: 0)",
+  "execution_time": 45.4
+}

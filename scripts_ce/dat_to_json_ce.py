@@ -37,7 +37,7 @@ from typing import Dict, List, Any, Tuple, Optional
 # CONFIGURACAO
 # ============================
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_DAT_DIR = os.path.join(SCRIPT_DIR, "..", "..", "api_vrp_java", "scripts", "DadosModificadosSuperCodigo")
+INPUT_DAT_DIR = os.path.join(SCRIPT_DIR, "dadosmod")
 OUTPUT_JSON_DIR = os.path.join(SCRIPT_DIR, "json_output_ce")
 
 
@@ -180,6 +180,17 @@ def parse_pickup_matrix(content: str, num_customers: int) -> List[Tuple[int, int
     new_match = re.search(r'(?<!\w)p\s*=\s*\[(.*?)\];', content, re.DOTALL)
     if new_match:
         p_str = new_match.group(1)
+        pairs = re.findall(r'\[(\d+)\s*,\s*(\d+)\]', p_str)
+        if pairs:
+            result = [(int(a), int(b)) for a, b in pairs]
+            while len(result) < num_customers:
+                result.append((0, 0))
+            return result[:num_customers]
+
+    # Fallback: formato novo sem ponto-e-virgula: p=[[a,b],[c,d],...]]
+    no_semi_match = re.search(r'(?<!\w)p\s*=\s*\[(.*)\]', content, re.DOTALL)
+    if no_semi_match:
+        p_str = no_semi_match.group(1)
         pairs = re.findall(r'\[(\d+)\s*,\s*(\d+)\]', p_str)
         if pairs:
             result = [(int(a), int(b)) for a, b in pairs]
