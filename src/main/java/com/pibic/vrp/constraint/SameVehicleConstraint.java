@@ -7,36 +7,34 @@ import com.graphhopper.jsprit.core.problem.misc.JobInsertionContext;
 import com.graphhopper.jsprit.core.problem.solution.route.VehicleRoute;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.ActivityVisitor;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.TourActivity;
+import com.graphhopper.jsprit.core.problem.vehicle.Vehicle;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Constraint que forca jobs relacionados a serem atendidos pelo mesmo veiculo.
+ * Constraint que forca jobs relacionados (delivery+pickup da mesma demanda) a serem
+ * servidos pelo MESMO VEICULO FISICO - nao apenas pelo mesmo ID.
  *
- * No contexto do problema CE (Coleta e Entrega), esta constraint garante que
- * o Delivery e Pickup da mesma demanda sejam feitos pelo mesmo carrier.
- *
- * Exemplo:
- * - d_5_1 (delivery da demanda do carrier 1 no cliente 5)
- * - p_5_1 (pickup da demanda do carrier 1 no cliente 5)
- *
- * A constraint garante que d_5_1 e p_5_1 estejam no mesmo veiculo,
- * equivalente a variavel z[i,r,s] do modelo exato onde o mesmo carrier s
- * que faz delivery tambem faz pickup da demanda de r no cliente i.
+ * IMPORTANTE: com FleetSize.INFINITE o Jsprit instancia varias copias do mesmo
+ * template de veiculo, todas compartilhando o ID (ex: "vehicle_2"). Comparar so
+ * IDs levava a bug onde delivery e pickup acabavam em rotas fisicas distintas
+ * do mesmo ID, gerando solucoes invalidas com custo menor que o Gurobi.
+ * Agora comparamos a referencia do objeto Vehicle (identidade).
  */
 public class SameVehicleConstraint implements HardRouteConstraint {
 
     private final Map<String, String> relatedJobs;
-    private final Map<String, String> jobToVehicleMap;
+    // jobId -> Vehicle (instancia fisica), atualizado pelo StateUpdater
+    private final Map<String, Vehicle> jobToVehicleMap;
 
     public SameVehicleConstraint(Map<String, String> relatedJobs) {
         this.relatedJobs = new HashMap<>(relatedJobs);
         this.jobToVehicleMap = new ConcurrentHashMap<>();
     }
 
-    public Map<String, String> getJobToVehicleMap() {
+    public Map<String, Vehicle> getJobToVehicleMap() {
         return jobToVehicleMap;
     }
 
@@ -50,32 +48,28 @@ public class SameVehicleConstraint implements HardRouteConstraint {
             return true;
         }
 
-        String targetVehicleId = context.getNewVehicle().getId();
-        String relatedJobVehicleId = findVehicleForJob(context, relatedJobId);
+        Vehicle targetVehicle = context.getNewVehicle();
+        Vehicle relatedJobVehicle = findVehicleForJob(context, relatedJobId);
 
-        if (relatedJobVehicleId == null) {
+        if (relatedJobVehicle == null) {
             return true;
         }
 
-        return targetVehicleId.equals(relatedJobVehicleId);
+        // Identidade de referencia: veiculos com mesmo ID mas objetos distintos
+        // (copias sob FleetSize.INFINITE) representam rotas fisicas diferentes.
+        return targetVehicle == relatedJobVehicle;
     }
 
-    private String findVehicleForJob(JobInsertionContext context, String jobId) {
+    private Vehicle findVehicleForJob(JobInsertionContext context, String jobId) {
         VehicleRoute currentRoute = context.getRoute();
         if (currentRoute != null && !currentRoute.isEmpty()) {
             for (Job job : currentRoute.getTourActivities().getJobs()) {
                 if (job.getId().equals(jobId)) {
-                    return currentRoute.getVehicle().getId();
+                    return currentRoute.getVehicle();
                 }
             }
         }
-
-        String vehicleId = jobToVehicleMap.get(jobId);
-        if (vehicleId != null) {
-            return vehicleId;
-        }
-
-        return null;
+        return jobToVehicleMap.get(jobId);
     }
 
     public void clear() {
@@ -84,18 +78,20 @@ public class SameVehicleConstraint implements HardRouteConstraint {
 
     public static class JobAssignmentUpdater implements StateUpdater, ActivityVisitor {
 
-        private final Map<String, String> jobToVehicleMap;
+        private final Map<String, Vehicle> jobToVehicleMap;
         private VehicleRoute currentRoute;
 
-        public JobAssignmentUpdater(Map<String, String> jobToVehicleMap) {
+        public JobAssignmentUpdater(Map<String, Vehicle> jobToVehicleMap) {
             this.jobToVehicleMap = jobToVehicleMap;
         }
 
         @Override
         public void begin(VehicleRoute route) {
             this.currentRoute = route;
-            String vehicleId = route.getVehicle().getId();
-            jobToVehicleMap.entrySet().removeIf(entry -> entry.getValue().equals(vehicleId));
+            Vehicle vehicle = route.getVehicle();
+            // Remove entradas previas cujo Vehicle era esta mesma instancia
+            // (a rota esta sendo revisitada e sera reescrita).
+            jobToVehicleMap.entrySet().removeIf(entry -> entry.getValue() == vehicle);
         }
 
         @Override
@@ -103,8 +99,7 @@ public class SameVehicleConstraint implements HardRouteConstraint {
             if (activity instanceof TourActivity.JobActivity) {
                 TourActivity.JobActivity jobActivity = (TourActivity.JobActivity) activity;
                 String jobId = jobActivity.getJob().getId();
-                String vehicleId = currentRoute.getVehicle().getId();
-                jobToVehicleMap.put(jobId, vehicleId);
+                jobToVehicleMap.put(jobId, currentRoute.getVehicle());
             }
         }
 
