@@ -1,3 +1,4 @@
+# --- build e IDE ---
 target/
 *.class
 *.jar
@@ -9,3 +10,29 @@ target/
 .project
 .classpath
 .venv/
+__pycache__/
+*.pyc
+
+# --- ferramentas de assistente ---
+.claude/
+
+# --- entregáveis do relatório (gerados localmente, não versionados) ---
+Relatorio_Final_*.docx
+relatorio_final.xlsx
+latex/
+docs/
+*.pdf
+
+# --- instâncias, entradas e saídas dos experimentos ---
+# Regeneráveis a partir dos .dat originais e das execuções da API.
+scripts_ce/dadosmod/
+scripts_ce/outros/
+scripts_ce/json_output_ce/
+scripts_ce/resultados*/
+scripts_ce/verificacao_final/
+scripts_ce/*.xlsx
+codigo_julia_exato/input/
+codigo_julia_exato/outros/
+codigo_julia_exato/resultados*/
+DadosModificadosSuperCodigo/
+json_output_ce/
