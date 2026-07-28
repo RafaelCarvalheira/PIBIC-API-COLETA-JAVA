@@ -16,6 +16,10 @@ __pycache__/
 # --- ferramentas de assistente ---
 .claude/
 
+# --- documentação de apoio (mantida localmente)
+DOCUMENTACAO_*
+CLAUDE.md
+
 # --- entregáveis do relatório (gerados localmente, não versionados) ---
 Relatorio_Final_*.docx
 relatorio_final.xlsx

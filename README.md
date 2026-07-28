@@ -161,8 +161,6 @@ src/main/java/com/pibic/vrp/
 
 codigo_julia_exato/                    # modelo exato de referência (JuMP + Gurobi)
 scripts_ce/                            # conversão, execução em lote, auditoria, relatório
-DOCUMENTACAO_METAHEURISTICA.md         # parâmetros e operadores, com rastreio ao código
-DOCUMENTACAO_TECNICA_CE*.md            # documentação técnica dos cenários
 ```
 
 ### Não versionado
