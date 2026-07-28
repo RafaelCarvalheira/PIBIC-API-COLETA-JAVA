@@ -13,44 +13,35 @@ public class VrpController {
     @Autowired
     private VrpService vrpService;
 
-    // ==================== CE-C8 (COM RESTRICAO C8) ====================
+    // ==================== run_CE (COM restricao C8 - cada cliente 1 visita) ====================
+    // Equivalente ao run_CE do Julia (supercodigo.jl). Nome alinhado com o modelo exato.
 
-    /**
-     * Resolve o problema CE COM restricao C8 (cada cliente visitado exatamente uma vez).
-     * Equivalente ao modelo exato em Julia.
-     */
-    @PostMapping("/ce-c8")
-    public VrpSolution solveCEWithC8(@RequestBody VrpInput input) {
+    @PostMapping("/run-CE")
+    public VrpSolution solveRunCE(@RequestBody VrpInput input) {
         return vrpService.solveWithC8(input, "CE");
     }
 
-    /**
-     * Resolve o problema CE COM C8 e SEM colaboracao horizontal.
-     * Cada transportadora atende apenas suas proprias demandas.
-     */
-    @PostMapping("/ce-c8-no-share")
-    public VrpSolution solveCEWithC8NoShare(@RequestBody VrpInput input) {
+    @PostMapping("/run-CE-no-share")
+    public VrpSolution solveRunCENoShare(@RequestBody VrpInput input) {
         return vrpService.solveWithC8NoShare(input);
     }
 
-    // ==================== CE-CUSTOM (COM CONSTRAINT DE MESMO VEICULO) ====================
+    // ==================== run_CEc8 (SEM restricao C8 - permite multiplas visitas) ====================
+    // Equivalente ao run_CEc8 do Julia. Usa SameVehicleConstraint + multi-start de alocacoes.
 
-    /**
-     * Resolve o problema CE SEM restricao C8, mas com constraint customizada.
-     * Multi-start com diferentes alocacoes de clientes compartilhados.
-     * Simula a variavel z[i,r,s] do modelo exato.
-     */
-    @PostMapping("/ce-custom")
-    public VrpSolution solveCECustom(@RequestBody VrpInput input) {
+    @PostMapping("/run-CEc8")
+    public VrpSolution solveRunCEc8(@RequestBody VrpInput input) {
         return vrpService.solveWithCustomConstraint(input, "CE");
     }
 
-    /**
-     * Resolve CE-Custom SEM colaboracao horizontal.
-     * Cada carrier atende apenas suas proprias demandas.
-     */
-    @PostMapping("/ce-custom-no-share")
-    public VrpSolution solveCECustomNoShare(@RequestBody VrpInput input) {
+    // ---- V2 experimental: modelagem corrigida do run_CEc8 (aditivo, remover para reverter)
+    @PostMapping("/run-CEc8-v2")
+    public VrpSolution solveRunCEc8V2(@RequestBody VrpInput input) {
+        return vrpService.solveWithCustomConstraintV2(input);
+    }
+
+    @PostMapping("/run-CEc8-no-share")
+    public VrpSolution solveRunCEc8NoShare(@RequestBody VrpInput input) {
         return vrpService.solveWithCustomConstraintNoShare(input);
     }
 }

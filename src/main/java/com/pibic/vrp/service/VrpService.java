@@ -17,6 +17,7 @@ import com.graphhopper.jsprit.core.util.Solutions;
 import com.graphhopper.jsprit.core.util.VehicleRoutingTransportCostsMatrix;
 import com.pibic.vrp.model.*;
 import com.pibic.vrp.constraint.SameVehicleConstraint;
+import com.pibic.vrp.constraint.SameCarrierConstraint; // V2 experimental
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -36,7 +37,44 @@ public class VrpService {
     private Map<String, Integer> customerPickupDemands = new HashMap<>();
     private int currentVehicleCapacity = 100;
 
-    // ==================== CE-C8 ====================
+    /**
+     * Numero de copias pre-criadas por carrier quando usamos FleetSize.FINITE.
+     * Precisa ser >= numero maximo de trips (um trip pode atender no limite 1 cliente),
+     * entao numCustomers eh um teto seguro. Usar FINITE (em vez de INFINITE) garante
+     * que cada rota tem uma instancia Vehicle distinta e pre-declarada, permitindo
+     * que SameVehicleConstraint (que compara identidade de referencia) funcione de
+     * forma deterministica entre iteracoes do ruin-and-recreate do Jsprit.
+     */
+    private static int fleetCopiesFor(VrpInput input) {
+        int n = (input != null && input.getCustomers() != null) ? input.getCustomers().size() : 0;
+        return Math.max(n, 20);
+    }
+
+    /**
+     * Custo da rota = tempo de chegada no depot final (com costPerDistance=1 e
+     * transportTime=distance, o tempo acumulado equivale ao custo da rota).
+     */
+    private static double computeRouteCost(VehicleRoute route) {
+        if (route == null || route.isEmpty()) return 0.0;
+        return route.getEnd().getArrTime() - route.getStart().getEndTime();
+    }
+
+    private static void addVehicleCopies(VehicleRoutingProblem.Builder vrpBuilder,
+                                         String baseId, String depotId,
+                                         VehicleType type, String skill, int copies) {
+        com.graphhopper.jsprit.core.problem.Location depot =
+                com.graphhopper.jsprit.core.problem.Location.newInstance(depotId);
+        for (int k = 0; k < copies; k++) {
+            VehicleImpl.Builder b = VehicleImpl.Builder.newInstance(baseId + "__" + k)
+                    .setStartLocation(depot)
+                    .setEndLocation(depot)
+                    .setType(type);
+            if (skill != null) b.addSkill(skill);
+            vrpBuilder.addVehicle(b.build());
+        }
+    }
+
+    // ==================== run_CE (COM restricao C8) ====================
 
     /**
      * Resolve o problema CE COM restricao C8 (cada cliente visitado exatamente uma vez).
@@ -105,31 +143,15 @@ public class VrpService {
                 .setFixedCost(0.0)
                 .build();
 
+        int copies = fleetCopiesFor(input);
         if ("CE".equals(mode)) {
-            vrpBuilder.addVehicle(VehicleImpl.Builder.newInstance("vehicle_1")
-                    .setStartLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depotA))
-                    .setEndLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depotA))
-                    .setType(typeA)
-                    .addSkill("1")
-                    .build());
-
-            vrpBuilder.addVehicle(VehicleImpl.Builder.newInstance("vehicle_2")
-                    .setStartLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depotB))
-                    .setEndLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depotB))
-                    .setType(typeB)
-                    .addSkill("2")
-                    .build());
+            addVehicleCopies(vrpBuilder, "vehicle_1", depotA, typeA, "1", copies);
+            addVehicleCopies(vrpBuilder, "vehicle_2", depotB, typeB, "2", copies);
         } else {
             String targetCarrier = "CE_A".equals(mode) ? "1" : "2";
             String depot = "CE_A".equals(mode) ? depotA : depotB;
             VehicleType type = "CE_A".equals(mode) ? typeA : typeB;
-
-            vrpBuilder.addVehicle(VehicleImpl.Builder.newInstance("vehicle_" + targetCarrier)
-                    .setStartLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depot))
-                    .setEndLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depot))
-                    .setType(type)
-                    .addSkill(targetCarrier)
-                    .build());
+            addVehicleCopies(vrpBuilder, "vehicle_" + targetCarrier, depot, type, targetCarrier, copies);
         }
 
         // 3. Construir customer_transp_Nr[r]
@@ -244,7 +266,7 @@ public class VrpService {
             }
         }
 
-        vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.INFINITE);
+        vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.FINITE);
 
         VehicleRoutingProblem problem = vrpBuilder.build();
 
@@ -288,7 +310,7 @@ public class VrpService {
                 .totalCost(totalCost)
                 .routes(combinedRoutes)
                 .status("COMPLETED")
-                .message("CE-C8 Sem colaboracao - Unassigned Jobs: " + totalUnassigned +
+                .message("run_CE NoShare - Unassigned Jobs: " + totalUnassigned +
                          " (A: " + unassignedA + ", B: " + unassignedB + ")")
                 .build();
     }
@@ -370,7 +392,7 @@ public class VrpService {
     }
 
     /**
-     * Versao sem colaboracao do CE-Custom.
+     * Versao sem colaboracao do run_CEc8 (SEM restricao C8).
      */
     public VrpSolution solveWithCustomConstraintNoShare(VrpInput input) {
         VrpSolution solutionA = solveWithCustomConstraintSingleCarrier(input, "1");
@@ -386,7 +408,7 @@ public class VrpService {
                 .problemId(input.getProblemId())
                 .totalCost(totalCost)
                 .routes(combinedRoutes)
-                .message("CE-Custom NoShare - Custo A: " + solutionA.getTotalCost() +
+                .message("run_CEc8 NoShare - Custo A: " + solutionA.getTotalCost() +
                         " | Custo B: " + solutionB.getTotalCost())
                 .build();
     }
@@ -484,7 +506,7 @@ public class VrpService {
                     .totalCost(0.0)
                     .routes(Collections.emptyList())
                     .status("COMPLETED")
-                    .message("CE-C8 - No Solution")
+                    .message("run_CE - No Solution")
                     .build();
         }
 
@@ -512,6 +534,7 @@ public class VrpService {
             routes.add(RouteDTO.builder()
                     .vehicleId(vehicleId)
                     .activitySequence(activities)
+                    .routeCost(computeRouteCost(route))
                     .build());
         }
 
@@ -520,7 +543,7 @@ public class VrpService {
                 .totalCost(solution.getCost())
                 .routes(routes)
                 .status("COMPLETED")
-                .message("CE-C8 - Unassigned Jobs: " + solution.getUnassignedJobs().size())
+                .message("run_CE - Unassigned Jobs: " + solution.getUnassignedJobs().size())
                 .build();
     }
 
@@ -585,12 +608,12 @@ public class VrpService {
         for (String cust : sharedCustomers) allCarrier2.put(cust, "2");
         configs.add(allCarrier2);
 
-        // Config 3: Todos separados (permite 2 visitas)
-        Map<String, String> allSeparated = new HashMap<>();
-        for (String cust : sharedCustomers) allSeparated.put(cust, "S");
-        configs.add(allSeparated);
+        // (Removido: alocacao "S" - Todos separados permitindo 2 visitas.
+        //  Violava a semantica de colaboracao do run_CEc8: cada cliente compartilhado
+        //  era atendido por ambos os carriers independentemente, gerando custo menor
+        //  que o Gurobi com rotas que o modelo exato nao admite.)
 
-        // Config 4: Baseado em proximidade ao deposito
+        // Config 3: Baseado em proximidade ao deposito
         Map<String, String> byProximity = new HashMap<>();
         for (String cust : sharedCustomers) {
             double distA = costToDepotA.getOrDefault(cust, Double.MAX_VALUE);
@@ -688,19 +711,9 @@ public class VrpService {
                 .setFixedCost(0.0)
                 .build();
 
-        vrpBuilder.addVehicle(VehicleImpl.Builder.newInstance("vehicle_1")
-                .setStartLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depotA))
-                .setEndLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depotA))
-                .setType(typeA)
-                .addSkill("1")
-                .build());
-
-        vrpBuilder.addVehicle(VehicleImpl.Builder.newInstance("vehicle_2")
-                .setStartLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depotB))
-                .setEndLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depotB))
-                .setType(typeB)
-                .addSkill("2")
-                .build());
+        int copies = fleetCopiesFor(input);
+        addVehicleCopies(vrpBuilder, "vehicle_1", depotA, typeA, "1", copies);
+        addVehicleCopies(vrpBuilder, "vehicle_2", depotB, typeB, "2", copies);
 
         // 3. Mapa de jobs relacionados
         Map<String, String> relatedJobs = new HashMap<>();
@@ -713,26 +726,22 @@ public class VrpService {
                 boolean hasCarrier2 = customerTranspNr.get("2").contains(customerId);
                 boolean isShared = hasCarrier1 && hasCarrier2;
 
-                String alloc = allocation.getOrDefault(customerId, "S");
+                // Allocation deve sempre conter "1" ou "2" (estrategia "S" foi removida
+                // por violar a colaboracao do run_CEc8). Default "1" para defesa.
+                String alloc = allocation.getOrDefault(customerId, "1");
 
                 if (hasCarrier1 && !hasCarrier2) {
                     createJobsForCarrier(vrpBuilder, customer, customerId, "1", "1", relatedJobs);
                 } else if (hasCarrier2 && !hasCarrier1) {
                     createJobsForCarrier(vrpBuilder, customer, customerId, "2", "2", relatedJobs);
                 } else if (isShared) {
-                    if ("1".equals(alloc)) {
-                        createCombinedJobsForCarrier(vrpBuilder, customer, customerId, "1", relatedJobs);
-                    } else if ("2".equals(alloc)) {
-                        createCombinedJobsForCarrier(vrpBuilder, customer, customerId, "2", relatedJobs);
-                    } else {
-                        createJobsForCarrier(vrpBuilder, customer, customerId, "1", null, relatedJobs);
-                        createJobsForCarrier(vrpBuilder, customer, customerId, "2", null, relatedJobs);
-                    }
+                    String chosen = "2".equals(alloc) ? "2" : "1";
+                    createCombinedJobsForCarrier(vrpBuilder, customer, customerId, chosen, relatedJobs);
                 }
             }
         }
 
-        vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.INFINITE);
+        vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.FINITE);
         VehicleRoutingProblem problem = vrpBuilder.build();
 
         // 5. StateManager e ConstraintManager
@@ -836,7 +845,7 @@ public class VrpService {
                     .totalCost(0.0)
                     .routes(Collections.emptyList())
                     .status("FAILED")
-                    .message("CE-Custom Multi-Start: No solution found")
+                    .message("run_CEc8 Multi-Start: No solution found")
                     .build();
         }
 
@@ -864,18 +873,26 @@ public class VrpService {
             routes.add(RouteDTO.builder()
                     .vehicleId(vehicleId)
                     .activitySequence(activities)
+                    .routeCost(computeRouteCost(route))
                     .build());
         }
 
-        // Contar visitas por localizacao
+        // Contar visitas fisicas por localizacao.
+        // Usar Set intra-rota mascarava duplicatas no mesmo veiculo (ex: uma rota
+        // com DELIVERY:8 e PICKUP:8 nao-consecutivos = 2 visitas, nao 1).
+        // Contamos uma visita por par DELIVERY/PICKUP no cliente, em qualquer rota.
         Map<String, Integer> visitCountByLocation = new HashMap<>();
         for (VehicleRoute route : solution.getRoutes()) {
-            Set<String> visitedInRoute = new HashSet<>();
+            Map<String, int[]> perLoc = new HashMap<>();
             for (TourActivity activity : route.getActivities()) {
-                visitedInRoute.add(activity.getLocation().getId());
+                String loc = activity.getLocation().getId();
+                int[] pd = perLoc.computeIfAbsent(loc, k -> new int[2]);
+                if (activity instanceof DeliveryActivity) pd[0]++;
+                else if (activity instanceof PickupActivity) pd[1]++;
             }
-            for (String loc : visitedInRoute) {
-                visitCountByLocation.merge(loc, 1, Integer::sum);
+            for (Map.Entry<String, int[]> e : perLoc.entrySet()) {
+                int visits = Math.max(e.getValue()[0], e.getValue()[1]);
+                if (visits > 0) visitCountByLocation.merge(e.getKey(), visits, Integer::sum);
             }
         }
 
@@ -891,7 +908,7 @@ public class VrpService {
                 .totalCost(solution.getCost())
                 .routes(routes)
                 .status("COMPLETED")
-                .message("CE-Custom Multi-Start | Unassigned: " + solution.getUnassignedJobs().size() +
+                .message("run_CEc8 Multi-Start | Unassigned: " + solution.getUnassignedJobs().size() +
                         " | Clientes compartilhados: " + numSharedCustomers +
                         " | Visitas (1x: " + singleVisit + ", 2x: " + multipleVisit + ")")
                 .build();
@@ -936,11 +953,7 @@ public class VrpService {
                 .setCostPerDistance(1.0)
                 .build();
 
-        vrpBuilder.addVehicle(VehicleImpl.Builder.newInstance("vehicle_" + carrierId)
-                .setStartLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depotId))
-                .setEndLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(depotId))
-                .setType(type)
-                .build());
+        addVehicleCopies(vrpBuilder, "vehicle_" + carrierId, depotId, type, null, fleetCopiesFor(input));
 
         // Jobs apenas deste carrier
         Map<String, String> relatedJobs = new HashMap<>();
@@ -979,7 +992,7 @@ public class VrpService {
             }
         }
 
-        vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.INFINITE);
+        vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.FINITE);
         VehicleRoutingProblem problem = vrpBuilder.build();
 
         VehicleRoutingProblemSolution bestSolution = solveWithMultiStart(problem, 5);
@@ -1024,6 +1037,7 @@ public class VrpService {
             routes.add(RouteDTO.builder()
                     .vehicleId(vehicleId)
                     .activitySequence(activities)
+                    .routeCost(computeRouteCost(route))
                     .build());
         }
 
@@ -1051,4 +1065,122 @@ public class VrpService {
         }
         return 0;
     }
+
+    // ==================== INICIO V2 (experimental, aditivo) ====================
+
+    /**
+     * Versao corrigida do cenario SEM a restricao c8 (run_CEc8).
+     *
+     * Diferencas em relacao a solveWithCustomConstraint:
+     *
+     * 1. O cliente compartilhado recebe UM PAR DE JOBS POR TRANSPORTADORA, sem
+     *    skill restritiva. A escolha de quem o atende passa a ser feita pela
+     *    busca, exatamente como a variavel z[i,r,s] do modelo exato. Na versao
+     *    anterior as duas demandas eram somadas num unico par com a skill da
+     *    transportadora escolhida por pre-processamento, o que impedia que as
+     *    duas transportadoras atendessem o mesmo cliente separadamente.
+     *
+     * 2. Usa SameCarrierConstraint no lugar de SameVehicleConstraint: o modelo
+     *    exige mesma transportadora para entrega e coleta de uma demanda, nao
+     *    mesmo veiculo.
+     *
+     * 3. Dispensa a enumeracao externa de alocacoes e usa o mesmo orcamento de
+     *    busca do cenario com simultaneidade (10 partidas), o que torna os dois
+     *    cenarios comparaveis.
+     */
+    public VrpSolution solveWithCustomConstraintV2(VrpInput input) {
+        customerDeliveryDemands.clear();
+        customerPickupDemands.clear();
+
+        Map<String, String> carrierToDepot = new HashMap<>();
+        if (input.getFleets() != null) {
+            for (Fleet fleet : input.getFleets()) {
+                carrierToDepot.put(String.valueOf(fleet.getCarrierId()),
+                        String.valueOf(fleet.getDepotLocationId()));
+            }
+        }
+        String depotA = carrierToDepot.getOrDefault("1", "16");
+        String depotB = carrierToDepot.getOrDefault("2", "17");
+
+        VehicleRoutingProblem.Builder vrpBuilder = VehicleRoutingProblem.Builder.newInstance();
+
+        // 1. Matriz de custos
+        VehicleRoutingTransportCostsMatrix.Builder costMatrixBuilder =
+                VehicleRoutingTransportCostsMatrix.Builder.newInstance(true);
+        if (input.getCostMatrix() != null) {
+            for (CostMatrixEntry entry : input.getCostMatrix()) {
+                String from = String.valueOf(entry.getFrom());
+                String to = String.valueOf(entry.getTo());
+                costMatrixBuilder.addTransportDistance(from, to, entry.getCost());
+                costMatrixBuilder.addTransportTime(from, to, entry.getCost());
+            }
+        }
+        costMatrixBuilder.addTransportDistance(depotA, depotA, 0.0);
+        costMatrixBuilder.addTransportTime(depotA, depotA, 0.0);
+        costMatrixBuilder.addTransportDistance(depotB, depotB, 0.0);
+        costMatrixBuilder.addTransportTime(depotB, depotB, 0.0);
+        vrpBuilder.setRoutingCost(costMatrixBuilder.build());
+
+        // 2. Veiculos
+        int defaultCapacity = input.getGlobalParameters() != null
+                ? input.getGlobalParameters().getVehicleCapacity() : 100;
+        currentVehicleCapacity = defaultCapacity;
+
+        VehicleType typeA = VehicleTypeImpl.Builder.newInstance("type_1")
+                .addCapacityDimension(0, defaultCapacity)
+                .setCostPerDistance(1.0).setFixedCost(0.0).build();
+        VehicleType typeB = VehicleTypeImpl.Builder.newInstance("type_2")
+                .addCapacityDimension(0, defaultCapacity)
+                .setCostPerDistance(1.0).setFixedCost(0.0).build();
+
+        int copies = fleetCopiesFor(input);
+        addVehicleCopies(vrpBuilder, "vehicle_1", depotA, typeA, "1", copies);
+        addVehicleCopies(vrpBuilder, "vehicle_2", depotB, typeB, "2", copies);
+
+        // 3. Jobs: um par por transportadora, sem skill quando o cliente e compartilhado
+        Map<String, String> relatedJobs = new HashMap<>();
+        int compartilhados = 0;
+
+        if (input.getCustomers() != null) {
+            for (Customer customer : input.getCustomers()) {
+                String customerId = String.valueOf(customer.getId());
+                boolean tem1 = customer.getDeliveryDemandForCarrier("1") > 0
+                        || customer.getPickupDemandForCarrier("1") > 0;
+                boolean tem2 = customer.getDeliveryDemandForCarrier("2") > 0
+                        || customer.getPickupDemandForCarrier("2") > 0;
+                boolean compartilhado = tem1 && tem2;
+                if (compartilhado) compartilhados++;
+
+                // skill nula no cliente compartilhado: a busca decide a transportadora
+                if (tem1) {
+                    createJobsForCarrier(vrpBuilder, customer, customerId, "1",
+                            compartilhado ? null : "1", relatedJobs);
+                }
+                if (tem2) {
+                    createJobsForCarrier(vrpBuilder, customer, customerId, "2",
+                            compartilhado ? null : "2", relatedJobs);
+                }
+            }
+        }
+
+        vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.FINITE);
+        VehicleRoutingProblem problem = vrpBuilder.build();
+
+        com.graphhopper.jsprit.core.algorithm.state.StateManager stateManager =
+                new com.graphhopper.jsprit.core.algorithm.state.StateManager(problem);
+        com.graphhopper.jsprit.core.problem.constraint.ConstraintManager constraintManager =
+                new com.graphhopper.jsprit.core.problem.constraint.ConstraintManager(problem, stateManager);
+
+        SameCarrierConstraint sameCarrier = new SameCarrierConstraint(relatedJobs);
+        constraintManager.addConstraint(sameCarrier);
+        stateManager.addStateUpdater(new SameVehicleConstraint.JobAssignmentUpdater(
+                sameCarrier.getJobToVehicleMap()));
+
+        VehicleRoutingProblemSolution best = solveWithConstraintMultiStart(
+                problem, stateManager, constraintManager, 10, true);
+
+        return mapSolutionCustomMultiStart(best, input.getProblemId(), "V2", compartilhados);
+    }
+
+    // ==================== FIM V2 ====================
 }
