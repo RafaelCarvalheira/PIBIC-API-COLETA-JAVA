@@ -1,0 +1,69 @@
+{
+ "problemId": "ce_8056",
+ "totalCost": 550.46,
+ "routes": [
+  {
+   "vehicleId": "vehicle_1__1",
+   "activitySequence": [
+    "START-16",
+    "DELIVERY:1",
+    "PICKUP:1",
+    "DELIVERY:15",
+    "PICKUP:15",
+    "DELIVERY:15",
+    "PICKUP:15",
+    "DELIVERY:12",
+    "PICKUP:12",
+    "PICKUP:9",
+    "DELIVERY:9",
+    "END-16"
+   ],
+   "routeCost": 89.39999999999999
+  },
+  {
+   "vehicleId": "vehicle_2__1",
+   "activitySequence": [
+    "START-17",
+    "DELIVERY:2",
+    "PICKUP:2",
+    "DELIVERY:7",
+    "PICKUP:7",
+    "DELIVERY:10",
+    "PICKUP:10",
+    "PICKUP:14",
+    "DELIVERY:14",
+    "DELIVERY:5",
+    "PICKUP:5",
+    "PICKUP:8",
+    "DELIVERY:8",
+    "DELIVERY:6",
+    "PICKUP:6",
+    "END-17"
+   ],
+   "routeCost": 257.09
+  },
+  {
+   "vehicleId": "vehicle_1__2",
+   "activitySequence": [
+    "START-16",
+    "DELIVERY:11",
+    "PICKUP:11",
+    "DELIVERY:5",
+    "PICKUP:5",
+    "DELIVERY:4",
+    "DELIVERY:4",
+    "PICKUP:4",
+    "PICKUP:4",
+    "DELIVERY:13",
+    "PICKUP:13",
+    "DELIVERY:3",
+    "PICKUP:3",
+    "END-16"
+   ],
+   "routeCost": 203.96999999999997
+  }
+ ],
+ "status": "COMPLETED",
+ "message": "run_CEc8 Multi-Start | Unassigned: 0 | Clientes compartilhados: 3 | Visitas (1x: 12, 2x: 3)",
+ "_tempoSegundos": 27.96
+}

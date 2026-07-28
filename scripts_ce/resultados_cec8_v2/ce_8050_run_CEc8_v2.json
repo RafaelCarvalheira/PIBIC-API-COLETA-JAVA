@@ -1,0 +1,127 @@
+{
+ "problemId": "ce_8050",
+ "totalCost": 1018.34,
+ "routes": [
+  {
+   "vehicleId": "vehicle_1__14",
+   "activitySequence": [
+    "START-31",
+    "PICKUP:11",
+    "DELIVERY:11",
+    "DELIVERY:14",
+    "PICKUP:14",
+    "DELIVERY:12",
+    "PICKUP:12",
+    "PICKUP:4",
+    "DELIVERY:4",
+    "PICKUP:2",
+    "DELIVERY:2",
+    "PICKUP:17",
+    "PICKUP:17",
+    "DELIVERY:17",
+    "DELIVERY:17",
+    "PICKUP:16",
+    "DELIVERY:16",
+    "PICKUP:16",
+    "DELIVERY:16",
+    "PICKUP:22",
+    "END-31"
+   ],
+   "routeCost": 252.66
+  },
+  {
+   "vehicleId": "vehicle_2__1",
+   "activitySequence": [
+    "START-32",
+    "DELIVERY:25",
+    "PICKUP:25",
+    "DELIVERY:25",
+    "PICKUP:25",
+    "DELIVERY:5",
+    "PICKUP:5",
+    "PICKUP:9",
+    "DELIVERY:9",
+    "PICKUP:24",
+    "DELIVERY:24",
+    "PICKUP:21",
+    "DELIVERY:21",
+    "DELIVERY:30",
+    "PICKUP:30",
+    "DELIVERY:10",
+    "PICKUP:10",
+    "DELIVERY:27",
+    "PICKUP:27",
+    "END-32"
+   ],
+   "routeCost": 308.0199999999999
+  },
+  {
+   "vehicleId": "vehicle_2__2",
+   "activitySequence": [
+    "START-32",
+    "PICKUP:20",
+    "PICKUP:20",
+    "DELIVERY:20",
+    "DELIVERY:20",
+    "PICKUP:23",
+    "DELIVERY:23",
+    "DELIVERY:26",
+    "PICKUP:26",
+    "DELIVERY:26",
+    "PICKUP:26",
+    "END-32"
+   ],
+   "routeCost": 104.12
+  },
+  {
+   "vehicleId": "vehicle_1__2",
+   "activitySequence": [
+    "START-31",
+    "PICKUP:13",
+    "DELIVERY:13",
+    "DELIVERY:22",
+    "DELIVERY:22",
+    "PICKUP:22",
+    "PICKUP:29",
+    "DELIVERY:29",
+    "DELIVERY:29",
+    "PICKUP:29",
+    "DELIVERY:28",
+    "PICKUP:28",
+    "PICKUP:6",
+    "DELIVERY:6",
+    "END-31"
+   ],
+   "routeCost": 121.88
+  },
+  {
+   "vehicleId": "vehicle_1__3",
+   "activitySequence": [
+    "START-31",
+    "DELIVERY:1",
+    "PICKUP:1",
+    "DELIVERY:1",
+    "PICKUP:1",
+    "DELIVERY:3",
+    "PICKUP:3",
+    "DELIVERY:8",
+    "DELIVERY:8",
+    "PICKUP:8",
+    "PICKUP:8",
+    "DELIVERY:7",
+    "PICKUP:7",
+    "DELIVERY:15",
+    "PICKUP:15",
+    "DELIVERY:19",
+    "PICKUP:19",
+    "DELIVERY:18",
+    "PICKUP:18",
+    "END-31"
+   ],
+   "routeCost": 231.66000000000003
+  }
+ ],
+ "status": "COMPLETED",
+ "message": "run_CEc8 Multi-Start | Unassigned: 0 | Clientes compartilhados: 9 | Visitas (1x: 21, 2x: 9)",
+ "_tempoSegundos": 149.5
+}

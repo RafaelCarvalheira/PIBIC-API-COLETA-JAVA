@@ -323,13 +323,16 @@ def tab_parametros(cur):
     # celula: o que interessa na tabela e justamente onde os modos divergem.
     cab = [["Parâmetro", "Com simultaneidade", "Sem simultaneidade"]]
     linhas = [
-        ["Mecanismo de colaboração", "skills do Jsprit",
-         "alocação enumerada + SameVehicleConstraint"],
-        ["Partidas (multi-start)", "10", "2 por alocação, até 7 alocações"],
-        ["Esforço total (iterações)", "10.000", "até 14.000"],
-        ["Troca de veículo", "habilitada", "desabilitada"],
+        ["Cliente compartilhado", "um par de tarefas, demandas somadas",
+         "um par de tarefas por transportadora"],
+        ["Vínculo entre entrega e coleta", "mesmo veículo", "mesma transportadora"],
+        ["Alocação do cliente compartilhado", "decidida pela busca (skills)",
+         "decidida pela busca (skills)"],
+        ["Partidas (multi-start)", "10", "10"],
         ["Iterações por partida", "1.000", "1.000"],
+        ["Esforço total (iterações)", "10.000", "10.000"],
         ["Threads", "4", "4"],
+        ["Troca de veículo", "habilitada", "habilitada"],
         ["Limiar inicial (θ₀)", "0,03", "0,03"],
         ["Decaimento do limiar (α)", "0,15", "0,15"],
         ["Semente aleatória", "determinística (partida × 1.000 + 42)",
@@ -423,9 +426,7 @@ def tab_random_clustered(cur):
                                       Cm(1.8), Cm(1.6), Cm(1.6)], tam=9,
                alinhamentos=[WD_ALIGN_PARAGRAPH.LEFT] + [WD_ALIGN_PARAGRAPH.CENTER] * 6)
     cur.fonte_tabela("Nota: “Iguais” indica o número de instâncias em que o Jsprit "
-                     "reproduziu exatamente o custo do método exato. Os valores do "
-                     "cenário sem simultaneidade refletem a limitação de modelagem "
-                     "discutida na seção de resultados.")
+                     "reproduziu exatamente o custo do método exato.")
 
 
 def tab_cenarios(cur):
@@ -645,9 +646,9 @@ def escrever_resumo(cur):
           "diferença média de custo de 0,22% no conjunto de 12 instâncias e de 0,36% no "
           "conjunto de 100 instâncias, reproduzindo exatamente a solução ótima em 60 dos "
           "100 casos e superando o incumbente do otimizador em instâncias não resolvidas até "
-          "a otimalidade. O tempo de processamento manteve-se abaixo de 82 segundos em "
-          "todas as execuções, contra médias superiores a 6.500 segundos do método exato "
-          "nas maiores instâncias. Verificou-se ainda que a meta-heurística estima a "
+          "a otimalidade. Nesse cenário o tempo de processamento manteve-se abaixo de 82 "
+          "segundos em todas as execuções, contra médias superiores a 6.500 segundos do "
+          "método exato nas maiores instâncias. Verificou-se ainda que a meta-heurística estima a "
           "economia proporcionada pela colaboração, de 9,50% em média, com desvio "
           "inferior a 0,2 ponto percentual em relação ao método exato, o que a habilita "
           "como ferramenta prática de apoio à decisão.", recuo=False)
@@ -866,28 +867,31 @@ def escrever_metodologia(cur):
           "tarefas distintas: uma de entrega, que reduz a carga do veículo, e uma de "
           "coleta, que a aumenta. Essa separação é necessária para que a verificação de "
           "capacidade seja feita corretamente em cada ponto da rota, respeitando a carga "
-          "acumulada ao longo do trajeto. Para garantir que ambas as tarefas de um mesmo "
-          "cliente sejam atendidas pelo mesmo veículo físico, exigência que o Jsprit não "
-          "oferece nativamente para tarefas independentes, implementou-se uma restrição "
-          "customizada de rota rígida, denominada SameVehicleConstraint, apoiada em um "
-          "atualizador de estado que rastreia, a cada modificação, qual instância de "
-          "veículo atende cada tarefa. Como a comparação é feita por identidade de "
-          "objeto, foi necessário declarar a frota com tamanho finito, pré-instanciando "
-          "um número fixo de veículos por transportadora, de modo que cada rota física "
-          "corresponda a um objeto distinto.")
-    cur.p("A colaboração horizontal foi modelada por dois mecanismos, conforme o cenário. "
-          "No cenário com simultaneidade, empregou-se o mecanismo nativo de habilidades "
-          "do Jsprit: cada veículo recebe a habilidade correspondente à sua "
-          "transportadora e cada cliente exclusivo exige a habilidade do seu atendente, "
-          "ao passo que clientes compartilhados não recebem exigência alguma, delegando "
-          "ao algoritmo a decisão de alocação. No cenário sem simultaneidade, em que um "
-          "mesmo cliente pode ser visitado mais de uma vez, o espaço de alocações é "
-          "explorado externamente: geram-se até sete configurações distintas de "
-          "atribuição dos clientes compartilhados (todas para a primeira transportadora, "
-          "todas para a segunda, por proximidade do depósito, por proximidade inversa e "
-          "variações combinatórias ou aleatórias com semente fixa) e cada configuração é "
-          "resolvida por uma execução independente da meta-heurística, retendo-se a de "
-          "menor custo total.")
+          "acumulada ao longo do trajeto. Como o Jsprit não oferece nativamente vínculo "
+          "entre tarefas independentes, o par foi amarrado por uma restrição customizada "
+          "de rota rígida, apoiada em um atualizador de estado que rastreia, a cada "
+          "modificação, qual veículo atende cada tarefa.")
+    cur.p("A alocação dos clientes compartilhados não é fixada de antemão em nenhum dos "
+          "cenários: ela é deixada a cargo da própria busca, exatamente como a variável "
+          "binária de alocação do modelo matemático. Isso é obtido pelo mecanismo nativo "
+          "de habilidades do Jsprit. Cada veículo recebe a habilidade correspondente à "
+          "sua transportadora e as tarefas de um cliente exclusivo exigem a habilidade "
+          "do seu atendente, ao passo que as tarefas de um cliente compartilhado não "
+          "recebem exigência alguma, de modo que o algoritmo decide, ao inseri-las, qual "
+          "transportadora as atende.")
+    cur.p("A distinção entre os dois cenários está na representação do cliente "
+          "compartilhado e na natureza do vínculo. No cenário com simultaneidade, as "
+          "demandas das duas transportadoras são somadas em um único par de tarefas, e a "
+          "restrição exige que entrega e coleta sejam atendidas pelo mesmo veículo, o "
+          "que reproduz a visita única imposta pelo modelo. No cenário sem "
+          "simultaneidade, o cliente recebe um par de tarefas por transportadora, e a "
+          "restrição exige apenas que entrega e coleta de uma mesma demanda fiquem com a "
+          "mesma transportadora, sem obrigá-las ao mesmo veículo. Essa formulação "
+          "reproduz o modelo de referência, no qual as variáveis de roteamento são "
+          "indexadas por transportadora, sem índice de veículo, e uma única variável de "
+          "alocação governa entrega e coleta. Ela admite, em consequência, tanto que as "
+          "duas transportadoras atendam separadamente o mesmo cliente quanto que uma "
+          "delas o visite em duas passagens distintas.")
 
     cur.titulo("Instâncias e protocolo experimental", nivel=2)
     cur.p("Os experimentos empregaram os dois conjuntos de instâncias utilizados por "
@@ -1007,50 +1011,27 @@ def escrever_resultados(cur):
           "sanidade da implementação, atestando que os desvios observados nos demais "
           "casos decorrem da dificuldade do problema colaborativo e não de erro de "
           "modelagem.")
-    cur.p("O cenário sem simultaneidade, ao contrário, é o mais desafiador: a diferença "
-          "média sobe para +3,07% no conjunto S2 e +3,85% no conjunto S1, com degradação "
-          "acentuada nos grupos maiores, chegando a +7,10% para 30 clientes. Em nenhuma "
-          "instância a meta-heurística superou o método exato.")
-    cur.p("A investigação dessa diferença conduziu a uma auditoria das rotas produzidas, "
-          "cujo resultado altera a interpretação dos números. Nas 112 instâncias "
-          "resolvidas no cenário sem simultaneidade, nenhum cliente foi atendido por duas "
-          "transportadoras e nenhum cliente recebeu mais de uma visita. A mesma "
-          "verificação aplicada às soluções do método exato no mesmo cenário mostra o "
-          "oposto: em seis das oito instâncias cujas rotas foram preservadas há ao menos "
-          "um cliente atendido pelas duas transportadoras e, em cinco delas, ao menos "
-          "um cliente visitado duas vezes pela mesma transportadora. Aplicado às "
-          "soluções do "
-          "cenário com simultaneidade, o procedimento retorna zero para ambos os métodos, "
-          "como esperado, o que atesta sua validade.")
-    cur.p("A causa está na modelagem adotada. Para um cliente compartilhado, as demandas "
-          "das duas transportadoras são somadas em um único par de tarefas de entrega e "
-          "coleta, ao qual se associa a habilidade da transportadora definida na etapa de "
-          "alocação. Esse cliente resulta, portanto, sempre atendido uma única vez e por "
-          "uma única transportadora, que é precisamente o que a restrição de "
-          "simultaneidade impõe. A possibilidade que caracteriza o cenário relaxado, a de "
-          "que cada transportadora atenda separadamente a sua própria demanda no mesmo "
-          "cliente, nunca chega a ser construída.")
-    cur.p("Disso decorre que a diferença de 3,07% não mede a dificuldade da "
-          "meta-heurística diante da variante relaxada. Ela mede a distância entre uma "
-          "solução do modelo restrito e uma referência obtida no modelo relaxado, que são "
-          "formulações distintas. O espaço efetivamente percorrido nesse cenário é um "
-          "subconjunto daquele percorrido no cenário com simultaneidade, com a alocação "
-          "congelada previamente em vez de decidida pela busca. Isso explica que em "
-          "nenhuma instância a meta-heurística tenha superado o método exato e que, em 55 "
-          "das 112 instâncias, ela tenha devolvido solução mais cara do que a obtida por "
-          "ela própria no cenário restrito, resultado impossível entre soluções ótimas "
-          "verdadeiras.")
-    cur.p("Os resultados deste cenário devem ser lidos, portanto, como limitação "
-          "identificada da implementação, e não como medida de desempenho da "
-          "meta-heurística na variante sem simultaneidade. Os demais cenários não são "
-          "afetados: tanto no cenário com simultaneidade quanto no cenário sem "
-          "compartilhamento as tarefas de um cliente compartilhado não recebem habilidade "
-          "restritiva, e a escolha da transportadora cabe à própria busca, em "
-          "conformidade com o modelo correspondente. A correção necessária, detalhada "
-          "entre os desdobramentos, consiste em criar um par de tarefas por "
-          "transportadora para o cliente compartilhado, dispensando a enumeração externa "
-          "de configurações, e em substituir a exigência de mesmo veículo pela de "
-          "mesma transportadora, que é o que o modelo de referência estabelece.")
+    cur.p("O cenário sem simultaneidade é o mais exigente dos três, com diferença média "
+          "de +0,89% tanto no conjunto S1 quanto no S2. A degradação se concentra nas "
+          "instâncias maiores: mantém-se em +0,17% no grupo de 10 clientes e sobe até "
+          "+2,24% no grupo de 30. Ainda assim, a meta-heurística reproduziu exatamente o "
+          "custo de referência em 57 das 100 instâncias do conjunto ampliado e o superou "
+          "em três, todas com o método exato encerrado por limite de tempo.")
+    cur.p("O comportamento é coerente com a natureza do cenário. Ao dispensar a visita "
+          "única, o modelo admite que as duas transportadoras atendam separadamente o "
+          "mesmo cliente e que uma delas o visite em duas passagens, o que amplia o "
+          "espaço de soluções e exige da meta-heurística mecanismos que não são nativos "
+          "do framework, notadamente o vínculo por transportadora entre as tarefas de "
+          "uma mesma demanda. A busca faz uso efetivo dessa liberdade: em 26 das 112 "
+          "instâncias a solução final atribui ao menos um cliente compartilhado às duas "
+          "transportadoras, somando 35 clientes nessa condição, padrão que o cenário com "
+          "simultaneidade proíbe por construção.")
+    cur.p("O custo dessa generalidade aparece no tempo. O cenário sem simultaneidade "
+          "exige, para cada cliente compartilhado, o dobro de tarefas do cenário "
+          "restrito, e o tempo médio por instância sobe de 36,2 para 64,4 segundos no "
+          "conjunto S2, com máximo de 212,6 segundos. A aceleração frente ao método "
+          "exato cai proporcionalmente, mas permanece expressiva nos grupos maiores, "
+          "chegando a 39,4 vezes no grupo de 30 clientes.")
 
     cur.titulo("Economia proporcionada pela colaboração", nivel=2)
     cur.p("O propósito último do modelo colaborativo é quantificar quanto se economiza "
@@ -1111,11 +1092,10 @@ def escrever_resultados(cur):
           "veículo. A terceira, e mais consequente, diz respeito à alocação dos clientes "
           "compartilhados: no modelo exato essa decisão é endógena, e o otimizador explora "
           "simultaneamente todas as atribuições possíveis; no serviço desenvolvido ela é "
-          "tratada pelo mecanismo de habilidades ou por enumeração externa de "
-          "configurações, o que pode não cobrir todas as combinações quando o número de "
-          "clientes compartilhados é elevado. No cenário sem simultaneidade essa "
-          "diferença deixa de ser de grau e passa a ser de natureza, conforme a "
-          "auditoria relatada na seção anterior.")
+          "tratada pelo mecanismo de habilidades, que delega a decisão à busca sem "
+          "enumerar exaustivamente as combinações. Para um número elevado de clientes "
+          "compartilhados, algumas atribuições podem, portanto, nunca ser visitadas, o "
+          "que ajuda a explicar a degradação observada nas instâncias de maior porte.")
     cur.p("Por fim, a comparação de tempos deve ser lida com a devida cautela. Embora "
           "ambos os métodos tenham sido executados na mesma configuração de hardware, o "
           "otimizador operou sob limite de 7.200 segundos, o que trunca seus tempos nas "
@@ -1156,26 +1136,25 @@ def escrever_conclusao(cur):
           "para dimensionar o benefício de uma coalizão entre transportadoras, sem "
           "depender da disponibilidade de um otimizador comercial nem de horas de "
           "processamento.")
-    cur.p("O trabalho também delimitou onde a abordagem falha, e o fez por auditoria das "
-          "próprias soluções. No cenário sem a restrição de simultaneidade, nenhuma das "
-          "112 instâncias produziu cliente atendido por duas transportadoras, ao passo "
-          "que o método exato produz esse padrão em seis das oito instâncias verificadas. "
-          "A implementação soma as demandas das duas transportadoras em um único par de "
-          "tarefas e, com isso, nunca constrói a possibilidade que define esse cenário. A "
-          "diferença de 3,07% ali reportada mede, portanto, uma lacuna de modelagem, e "
-          "não o desempenho da meta-heurística na variante relaxada. Os demais cenários, "
-          "que sustentam as conclusões anteriores, não são afetados.")
+    cur.p("O trabalho também delimitou o alcance da abordagem. O cenário sem a "
+          "restrição de simultaneidade, por admitir que um cliente compartilhado seja "
+          "atendido separadamente pelas duas transportadoras, é o mais exigente: a "
+          "diferença média sobe para 0,89% e atinge 2,24% nas instâncias de 30 clientes, "
+          "e o tempo por instância quase dobra em relação ao cenário restrito. Em "
+          "contrapartida, a meta-heurística faz uso efetivo dessa liberdade, atribuindo "
+          "clientes compartilhados às duas transportadoras em 26 das 112 instâncias, o "
+          "que confirma que a variante relaxada foi de fato explorada e não apenas "
+          "aproximada pela solução do cenário restrito.")
     cur.p("Como desdobramentos, apontam-se quatro direções. A primeira é a implementação "
           "da variante muitos-para-muitos, na qual se elimina a figura do depósito "
           "central único e as demandas passam a ser expressas como pares origem-destino "
           "distribuídos arbitrariamente na rede. Trata-se de variante inicialmente prevista "
           "neste ciclo, cujo mapeamento das estruturas de dados foi iniciado, mas que não "
           "produziu resultados experimentais em tempo hábil e permanece, portanto, como "
-          "trabalho futuro. A segunda, de execução imediata, é a correção da modelagem "
-          "do cenário sem simultaneidade, criando um par de tarefas por transportadora "
-          "para o cliente compartilhado, substituindo a exigência de mesmo veículo pela de "
-          "mesma transportadora e reexecutando os dois conjuntos de instâncias, de "
-          "modo a obter para esse cenário medida comparável à dos demais. A terceira é a adoção de estratégias de partida "
+          "trabalho futuro. A segunda é a calibração adaptativa dos parâmetros da "
+          "meta-heurística em função do porte da instância, com atenção ao cenário sem "
+          "simultaneidade, onde o espaço de busca é maior e a degradação se concentra "
+          "nas instâncias de 30 clientes. A terceira é a adoção de estratégias de partida "
           "quente, inicializando a busca a partir de soluções construtivas de boa "
           "qualidade. A quarta é a extensão do modelo a janelas de tempo e frotas "
           "heterogêneas, ampliando sua aderência a contextos logísticos reais.")

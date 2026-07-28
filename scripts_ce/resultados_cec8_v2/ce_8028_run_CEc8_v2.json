@@ -1,0 +1,51 @@
+{
+ "problemId": "ce_8028",
+ "totalCost": 463.01,
+ "routes": [
+  {
+   "vehicleId": "vehicle_2__1",
+   "activitySequence": [
+    "START-12",
+    "DELIVERY:3",
+    "DELIVERY:3",
+    "PICKUP:3",
+    "PICKUP:3",
+    "DELIVERY:4",
+    "PICKUP:4",
+    "PICKUP:10",
+    "DELIVERY:10",
+    "PICKUP:2",
+    "DELIVERY:2",
+    "DELIVERY:8",
+    "PICKUP:8",
+    "END-12"
+   ],
+   "routeCost": 218.47
+  },
+  {
+   "vehicleId": "vehicle_1__1",
+   "activitySequence": [
+    "START-11",
+    "DELIVERY:7",
+    "DELIVERY:7",
+    "PICKUP:7",
+    "PICKUP:7",
+    "DELIVERY:9",
+    "PICKUP:9",
+    "DELIVERY:5",
+    "PICKUP:5",
+    "DELIVERY:6",
+    "PICKUP:6",
+    "DELIVERY:1",
+    "PICKUP:1",
+    "DELIVERY:1",
+    "PICKUP:1",
+    "END-11"
+   ],
+   "routeCost": 244.54000000000002
+  }
+ ],
+ "status": "COMPLETED",
+ "message": "run_CEc8 Multi-Start | Unassigned: 0 | Clientes compartilhados: 3 | Visitas (1x: 7, 2x: 3)",
+ "_tempoSegundos": 16.37
+}

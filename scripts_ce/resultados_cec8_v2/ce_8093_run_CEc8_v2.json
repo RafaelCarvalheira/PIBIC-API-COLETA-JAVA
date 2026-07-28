@@ -1,0 +1,115 @@
+{
+ "problemId": "ce_8093",
+ "totalCost": 836.5100000000001,
+ "routes": [
+  {
+   "vehicleId": "vehicle_1__1",
+   "activitySequence": [
+    "START-26",
+    "DELIVERY:16",
+    "PICKUP:16",
+    "DELIVERY:16",
+    "PICKUP:16",
+    "DELIVERY:12",
+    "DELIVERY:12",
+    "PICKUP:12",
+    "PICKUP:12",
+    "DELIVERY:4",
+    "PICKUP:4",
+    "DELIVERY:7",
+    "PICKUP:7",
+    "DELIVERY:14",
+    "PICKUP:14",
+    "DELIVERY:3",
+    "PICKUP:3",
+    "END-26"
+   ],
+   "routeCost": 185.60000000000002
+  },
+  {
+   "vehicleId": "vehicle_2__1",
+   "activitySequence": [
+    "START-27",
+    "DELIVERY:8",
+    "PICKUP:8",
+    "DELIVERY:24",
+    "DELIVERY:13",
+    "PICKUP:13",
+    "PICKUP:5",
+    "DELIVERY:5",
+    "PICKUP:25",
+    "DELIVERY:25",
+    "DELIVERY:21",
+    "PICKUP:21",
+    "PICKUP:24",
+    "DELIVERY:20",
+    "PICKUP:20",
+    "DELIVERY:1",
+    "PICKUP:1",
+    "END-27"
+   ],
+   "routeCost": 228.09999999999997
+  },
+  {
+   "vehicleId": "vehicle_2__2",
+   "activitySequence": [
+    "START-27",
+    "DELIVERY:15",
+    "DELIVERY:15",
+    "DELIVERY:11",
+    "DELIVERY:19",
+    "PICKUP:19",
+    "DELIVERY:19",
+    "PICKUP:19",
+    "DELIVERY:11",
+    "PICKUP:11",
+    "PICKUP:11",
+    "PICKUP:15",
+    "DELIVERY:23",
+    "PICKUP:23",
+    "PICKUP:23",
+    "END-27"
+   ],
+   "routeCost": 144.02999999999997
+  },
+  {
+   "vehicleId": "vehicle_2__3",
+   "activitySequence": [
+    "START-27",
+    "DELIVERY:23",
+    "DELIVERY:18",
+    "PICKUP:18",
+    "DELIVERY:6",
+    "PICKUP:6",
+    "DELIVERY:6",
+    "PICKUP:6",
+    "DELIVERY:10",
+    "PICKUP:22",
+    "DELIVERY:22",
+    "DELIVERY:10",
+    "PICKUP:10",
+    "PICKUP:10",
+    "PICKUP:15",
+    "END-27"
+   ],
+   "routeCost": 183.25
+  },
+  {
+   "vehicleId": "vehicle_1__13",
+   "activitySequence": [
+    "START-26",
+    "DELIVERY:17",
+    "PICKUP:17",
+    "DELIVERY:2",
+    "PICKUP:2",
+    "DELIVERY:9",
+    "PICKUP:9",
+    "END-26"
+   ],
+   "routeCost": 95.53
+  }
+ ],
+ "status": "COMPLETED",
+ "message": "run_CEc8 Multi-Start | Unassigned: 0 | Clientes compartilhados: 8 | Visitas (1x: 17, 2x: 8)",
+ "_tempoSegundos": 96.43
+}
