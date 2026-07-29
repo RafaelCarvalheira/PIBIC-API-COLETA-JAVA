@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Executa todas as instancias no endpoint /run-CEc8-v2 e consolida os custos.
+"""Executa todas as instancias no endpoint /run-CEc8 e consolida os custos.
 
 Retomavel: instancias ja resolvidas sao puladas, entao pode ser reexecutado
 depois de uma interrupcao sem refazer trabalho.
@@ -17,7 +17,7 @@ BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENTRADAS = os.path.join(BASE, "scripts_ce", "json_output_ce")
 SAIDAS = os.path.join(BASE, "scripts_ce", "resultados_cec8_v2")
 CSV_SAIDA = os.path.join(SAIDAS, "_resumo.csv")
-API = "http://localhost:8080/api/solve/run-CEc8-v2"
+API = "http://localhost:8080/api/solve/run-CEc8"
 
 
 def resolver(caminho, timeout=1800):

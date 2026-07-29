@@ -744,7 +744,7 @@ def escrever_justificativa(cur):
           "programação de aplicações desacopla o motor de resolução da linguagem e do ambiente do "
           "cliente, permite que o mesmo motor atenda diferentes sistemas e viabiliza a "
           "condução automatizada de baterias experimentais, recurso decisivo para a "
-          "execução das 448 resoluções que compõem os experimentos aqui reportados.")
+          "execução das 336 resoluções que compõem os experimentos aqui reportados.")
 
 
 def escrever_objetivos(cur):
@@ -904,8 +904,10 @@ def escrever_metodologia(cur):
           "coleta foram geradas de modo que sua soma, por transportadora, igualasse a "
           "soma das entregas, preservando a coerência do problema original e evitando "
           "alterações na capacidade dos veículos.")
-    cur.p("Cada instância foi resolvida nos quatro cenários implementados, totalizando 448 "
-          "execuções da meta-heurística. Destas, 336, correspondentes às três configurações para as quais o método exato dispõe de rotina de resolução equivalente, possuem solução de referência e constituem o objeto da análise que se segue. As execuções ocorreram em processador Intel Core i7 de "
+    cur.p("A avaliação abrange os três cenários para os quais o método exato dispõe de "
+          "rotina de resolução equivalente, o que permite comparar cada solução com uma "
+          "referência: os cenários com e sem simultaneidade em modo colaborativo e o "
+          "cenário sem compartilhamento. As execuções ocorreram em processador Intel Core i7 de "
           "3,20 GHz com 16 GB de memória RAM, mesma configuração empregada nas execuções "
           "do método exato, o que torna diretamente comparáveis os tempos reportados. Ao "
           "otimizador Gurobi foi imposto limite de 7.200 segundos por execução; à "
@@ -921,7 +923,9 @@ def escrever_metodologia(cur):
 
 
 def escrever_resultados(cur):
-    cur.p("Esta seção apresenta os resultados das 336 execuções comparadas. A "
+    cur.p("Esta seção apresenta os resultados das 336 execuções comparadas com a "
+          "referência exata, correspondentes às 112 instâncias resolvidas em cada um dos "
+          "três cenários avaliados. A "
           "apresentação segue a ordem: validação no conjunto reduzido, escalabilidade no "
           "conjunto ampliado, efeito da distribuição espacial dos clientes, comportamento "
           "nos demais cenários, economia proporcionada pela colaboração e, por fim, "
@@ -1113,8 +1117,8 @@ def escrever_conclusao(cur):
           "orientado a objetos restrições originalmente formuladas de modo declarativo, "
           "notadamente o vínculo entre as tarefas de coleta e entrega de um mesmo cliente "
           "e o controle da alocação dos clientes compartilhados. A validação percorreu "
-          "112 instâncias em quatro cenários, totalizando 448 execuções comparadas com os "
-          "resultados do método exato.")
+          "112 instâncias em cada um dos três cenários que dispõem de referência exata, "
+          "totalizando 336 execuções comparadas com os resultados do método exato.")
     cur.p("Os resultados sustentam três conclusões principais. A primeira é que a "
           "meta-heurística aproxima o ótimo com fidelidade elevada no cenário completo do "
           "problema: diferença média de 0,22% no conjunto S1 e de 0,36% no conjunto S2, "

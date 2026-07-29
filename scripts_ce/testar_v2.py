@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Teste de aceitacao do endpoint /run-CEc8-v2.
+"""Teste de aceitacao do endpoint /run-CEc8 (cenario sem simultaneidade).
 
 Criterio, derivado do modelo exato (supercodigo.jl, run_CEc8):
   - no cenario SEM a restricao c8, cliente compartilhado PODE ser atendido pelas
@@ -77,15 +77,15 @@ def rodar(rota, rotulo):
 
 
 if __name__ == "__main__":
-    antes = rodar("/run-CEc8", "ANTES (implementacao atual)")
-    depois = rodar("/run-CEc8-v2", "DEPOIS (V2 corrigida)")
-    controle = rodar("/run-CE", "CONTROLE (com c8, deve dar zero)")
+    relaxado = rodar("/run-CEc8", "SEM simultaneidade (deve ser > 0)")
+    controle = rodar("/run-CE", "COM simultaneidade, controle (deve ser 0)")
 
-    print("\n---------------- VEREDITO ----------------")
+    print("
+---------------- VEREDITO ----------------")
     print("clientes atendidos pelas duas transportadoras:")
-    print("  implementacao atual : %d  (esperado 0, e o defeito)" % antes)
-    print("  V2 corrigida        : %d  (precisa ser > 0)" % depois)
-    print("  controle com c8     : %d  (precisa ser 0)" % controle)
-    ok = depois > 0 and controle == 0
-    print("\nRESULTADO:", "correcao FUNCIONOU" if ok else "correcao NAO passou no teste")
+    print("  sem simultaneidade : %d  (o modelo admite; precisa ser > 0)" % relaxado)
+    print("  com simultaneidade : %d  (a restricao proibe; precisa ser 0)" % controle)
+    ok = relaxado > 0 and controle == 0
+    print("
+RESULTADO:", "modelagem COERENTE" if ok else "modelagem INCOERENTE")
     sys.exit(0 if ok else 1)

@@ -31,13 +31,7 @@ public class VrpController {
 
     @PostMapping("/run-CEc8")
     public VrpSolution solveRunCEc8(@RequestBody VrpInput input) {
-        return vrpService.solveWithCustomConstraint(input, "CE");
-    }
-
-    // ---- V2 experimental: modelagem corrigida do run_CEc8 (aditivo, remover para reverter)
-    @PostMapping("/run-CEc8-v2")
-    public VrpSolution solveRunCEc8V2(@RequestBody VrpInput input) {
-        return vrpService.solveWithCustomConstraintV2(input);
+        return vrpService.solveWithCustomConstraint(input);
     }
 
     @PostMapping("/run-CEc8-no-share")

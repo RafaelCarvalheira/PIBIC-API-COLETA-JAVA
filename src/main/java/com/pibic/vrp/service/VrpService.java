@@ -17,7 +17,7 @@ import com.graphhopper.jsprit.core.util.Solutions;
 import com.graphhopper.jsprit.core.util.VehicleRoutingTransportCostsMatrix;
 import com.pibic.vrp.model.*;
 import com.pibic.vrp.constraint.SameVehicleConstraint;
-import com.pibic.vrp.constraint.SameCarrierConstraint; // V2 experimental
+import com.pibic.vrp.constraint.SameCarrierConstraint;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -315,82 +315,6 @@ public class VrpService {
                 .build();
     }
 
-    // ==================== CE-CUSTOM ====================
-
-    /**
-     * Resolve o problema CE SEM restricao C8, mas com constraint customizada que garante
-     * que Delivery e Pickup da MESMA demanda sejam atendidos pelo MESMO carrier.
-     * Multi-start com diferentes alocacoes de clientes compartilhados.
-     */
-    public VrpSolution solveWithCustomConstraint(VrpInput input, String mode) {
-        customerDeliveryDemands.clear();
-        customerPickupDemands.clear();
-
-        // 1. Coletar informacoes dos depositos
-        Map<String, String> carrierToDepot = new HashMap<>();
-        if (input.getFleets() != null) {
-            for (Fleet fleet : input.getFleets()) {
-                carrierToDepot.put(String.valueOf(fleet.getCarrierId()), String.valueOf(fleet.getDepotLocationId()));
-            }
-        }
-
-        String depotA = carrierToDepot.getOrDefault("1", "16");
-        String depotB = carrierToDepot.getOrDefault("2", "17");
-
-        // 2. Identificar clientes compartilhados
-        Map<String, Set<String>> customerTranspNr = new HashMap<>();
-        customerTranspNr.put("1", new HashSet<>());
-        customerTranspNr.put("2", new HashSet<>());
-        List<String> sharedCustomers = new ArrayList<>();
-
-        if (input.getCustomers() != null) {
-            for (Customer customer : input.getCustomers()) {
-                String custId = String.valueOf(customer.getId());
-                boolean hasCarrier1 = customer.getDeliveryDemandForCarrier("1") > 0 || customer.getPickupDemandForCarrier("1") > 0;
-                boolean hasCarrier2 = customer.getDeliveryDemandForCarrier("2") > 0 || customer.getPickupDemandForCarrier("2") > 0;
-
-                if (hasCarrier1) customerTranspNr.get("1").add(custId);
-                if (hasCarrier2) customerTranspNr.get("2").add(custId);
-                if (hasCarrier1 && hasCarrier2) sharedCustomers.add(custId);
-            }
-        }
-
-        // 3. MULTI-START COM DIFERENTES ALOCACOES
-        VehicleRoutingProblemSolution bestSolution = null;
-        double bestCost = Double.MAX_VALUE;
-        String bestAllocation = "";
-        int numShared = sharedCustomers.size();
-
-        List<Map<String, String>> allocationConfigs = generateAllocationConfigs(sharedCustomers, input, depotA, depotB);
-
-        System.out.println("\n========== CE-CUSTOM MULTI-START ==========");
-        System.out.println("Clientes compartilhados: " + numShared);
-        System.out.println("Configuracoes a testar: " + allocationConfigs.size());
-
-        int configNum = 0;
-        for (Map<String, String> allocation : allocationConfigs) {
-            configNum++;
-
-            VehicleRoutingProblemSolution solution = solveWithAllocation(
-                input, allocation, customerTranspNr, depotA, depotB);
-
-            if (solution != null && solution.getCost() < bestCost) {
-                bestCost = solution.getCost();
-                bestSolution = solution;
-                bestAllocation = allocation.toString();
-                System.out.println("  Config " + configNum + ": custo=" + String.format("%.2f", solution.getCost()) + " [MELHOR]");
-            } else if (solution != null) {
-                System.out.println("  Config " + configNum + ": custo=" + String.format("%.2f", solution.getCost()));
-            }
-        }
-
-        System.out.println("Melhor alocacao: " + bestAllocation);
-        System.out.println("Melhor custo: " + String.format("%.2f", bestCost));
-        System.out.println("============================================\n");
-
-        return mapSolutionCustomMultiStart(bestSolution, input.getProblemId(), bestAllocation, numShared);
-    }
-
     /**
      * Versao sem colaboracao do run_CEc8 (SEM restricao C8).
      */
@@ -572,197 +496,6 @@ public class VrpService {
     }
 
     /**
-     * Gera configuracoes de alocacao para clientes compartilhados.
-     */
-    private List<Map<String, String>> generateAllocationConfigs(
-            List<String> sharedCustomers, VrpInput input, String depotA, String depotB) {
-
-        List<Map<String, String>> configs = new ArrayList<>();
-        int n = sharedCustomers.size();
-
-        if (n == 0) {
-            configs.add(new HashMap<>());
-            return configs;
-        }
-
-        // Construir mapa de custos para heuristica de proximidade
-        Map<String, Double> costToDepotA = new HashMap<>();
-        Map<String, Double> costToDepotB = new HashMap<>();
-
-        if (input.getCostMatrix() != null) {
-            for (CostMatrixEntry entry : input.getCostMatrix()) {
-                String from = String.valueOf(entry.getFrom());
-                String to = String.valueOf(entry.getTo());
-                if (from.equals(depotA)) costToDepotA.put(to, entry.getCost());
-                if (from.equals(depotB)) costToDepotB.put(to, entry.getCost());
-            }
-        }
-
-        // Config 1: Todos com carrier 1
-        Map<String, String> allCarrier1 = new HashMap<>();
-        for (String cust : sharedCustomers) allCarrier1.put(cust, "1");
-        configs.add(allCarrier1);
-
-        // Config 2: Todos com carrier 2
-        Map<String, String> allCarrier2 = new HashMap<>();
-        for (String cust : sharedCustomers) allCarrier2.put(cust, "2");
-        configs.add(allCarrier2);
-
-        // (Removido: alocacao "S" - Todos separados permitindo 2 visitas.
-        //  Violava a semantica de colaboracao do run_CEc8: cada cliente compartilhado
-        //  era atendido por ambos os carriers independentemente, gerando custo menor
-        //  que o Gurobi com rotas que o modelo exato nao admite.)
-
-        // Config 3: Baseado em proximidade ao deposito
-        Map<String, String> byProximity = new HashMap<>();
-        for (String cust : sharedCustomers) {
-            double distA = costToDepotA.getOrDefault(cust, Double.MAX_VALUE);
-            double distB = costToDepotB.getOrDefault(cust, Double.MAX_VALUE);
-            byProximity.put(cust, distA <= distB ? "1" : "2");
-        }
-        configs.add(byProximity);
-
-        // Config 5: Inverso da proximidade
-        Map<String, String> byProximityInverse = new HashMap<>();
-        for (String cust : sharedCustomers) {
-            double distA = costToDepotA.getOrDefault(cust, Double.MAX_VALUE);
-            double distB = costToDepotB.getOrDefault(cust, Double.MAX_VALUE);
-            byProximityInverse.put(cust, distA > distB ? "1" : "2");
-        }
-        configs.add(byProximityInverse);
-
-        // Combinacoes extras (maximo 8 totais)
-        if (n <= 3 && configs.size() < 8) {
-            int totalCombinations = (int) Math.pow(2, n);
-            for (int i = 0; i < totalCombinations && configs.size() < 8; i++) {
-                Map<String, String> combo = new HashMap<>();
-                for (int j = 0; j < n; j++) {
-                    String carrier = ((i >> j) & 1) == 0 ? "1" : "2";
-                    combo.put(sharedCustomers.get(j), carrier);
-                }
-                if (!configsContains(configs, combo)) {
-                    configs.add(combo);
-                }
-            }
-        } else if (configs.size() < 8) {
-            Random rand = new Random(42);
-            for (int i = 0; i < 3 && configs.size() < 8; i++) {
-                Map<String, String> randomConfig = new HashMap<>();
-                for (String cust : sharedCustomers) {
-                    int choice = rand.nextInt(2);
-                    randomConfig.put(cust, choice == 0 ? "1" : "2");
-                }
-                if (!configsContains(configs, randomConfig)) {
-                    configs.add(randomConfig);
-                }
-            }
-        }
-
-        return configs;
-    }
-
-    private boolean configsContains(List<Map<String, String>> configs, Map<String, String> target) {
-        for (Map<String, String> existing : configs) {
-            if (existing.equals(target)) return true;
-        }
-        return false;
-    }
-
-    /**
-     * Resolve o problema com uma alocacao especifica de clientes compartilhados.
-     */
-    private VehicleRoutingProblemSolution solveWithAllocation(
-            VrpInput input,
-            Map<String, String> allocation,
-            Map<String, Set<String>> customerTranspNr,
-            String depotA, String depotB) {
-
-        VehicleRoutingProblem.Builder vrpBuilder = VehicleRoutingProblem.Builder.newInstance();
-
-        // 1. Cost Matrix
-        VehicleRoutingTransportCostsMatrix.Builder costMatrixBuilder = VehicleRoutingTransportCostsMatrix.Builder.newInstance(true);
-        if (input.getCostMatrix() != null) {
-            for (CostMatrixEntry entry : input.getCostMatrix()) {
-                String from = String.valueOf(entry.getFrom());
-                String to = String.valueOf(entry.getTo());
-                costMatrixBuilder.addTransportDistance(from, to, entry.getCost());
-                costMatrixBuilder.addTransportTime(from, to, entry.getCost());
-            }
-        }
-        costMatrixBuilder.addTransportDistance(depotA, depotA, 0.0);
-        costMatrixBuilder.addTransportTime(depotA, depotA, 0.0);
-        costMatrixBuilder.addTransportDistance(depotB, depotB, 0.0);
-        costMatrixBuilder.addTransportTime(depotB, depotB, 0.0);
-        vrpBuilder.setRoutingCost(costMatrixBuilder.build());
-
-        // 2. Veiculos
-        int defaultCapacity = input.getGlobalParameters() != null ? input.getGlobalParameters().getVehicleCapacity() : 100;
-        currentVehicleCapacity = defaultCapacity;
-
-        VehicleType typeA = VehicleTypeImpl.Builder.newInstance("type_1")
-                .addCapacityDimension(0, defaultCapacity)
-                .setCostPerDistance(1.0)
-                .setFixedCost(0.0)
-                .build();
-
-        VehicleType typeB = VehicleTypeImpl.Builder.newInstance("type_2")
-                .addCapacityDimension(0, defaultCapacity)
-                .setCostPerDistance(1.0)
-                .setFixedCost(0.0)
-                .build();
-
-        int copies = fleetCopiesFor(input);
-        addVehicleCopies(vrpBuilder, "vehicle_1", depotA, typeA, "1", copies);
-        addVehicleCopies(vrpBuilder, "vehicle_2", depotB, typeB, "2", copies);
-
-        // 3. Mapa de jobs relacionados
-        Map<String, String> relatedJobs = new HashMap<>();
-
-        // 4. Criar jobs baseado na alocacao
-        if (input.getCustomers() != null) {
-            for (Customer customer : input.getCustomers()) {
-                String customerId = String.valueOf(customer.getId());
-                boolean hasCarrier1 = customerTranspNr.get("1").contains(customerId);
-                boolean hasCarrier2 = customerTranspNr.get("2").contains(customerId);
-                boolean isShared = hasCarrier1 && hasCarrier2;
-
-                // Allocation deve sempre conter "1" ou "2" (estrategia "S" foi removida
-                // por violar a colaboracao do run_CEc8). Default "1" para defesa.
-                String alloc = allocation.getOrDefault(customerId, "1");
-
-                if (hasCarrier1 && !hasCarrier2) {
-                    createJobsForCarrier(vrpBuilder, customer, customerId, "1", "1", relatedJobs);
-                } else if (hasCarrier2 && !hasCarrier1) {
-                    createJobsForCarrier(vrpBuilder, customer, customerId, "2", "2", relatedJobs);
-                } else if (isShared) {
-                    String chosen = "2".equals(alloc) ? "2" : "1";
-                    createCombinedJobsForCarrier(vrpBuilder, customer, customerId, chosen, relatedJobs);
-                }
-            }
-        }
-
-        vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.FINITE);
-        VehicleRoutingProblem problem = vrpBuilder.build();
-
-        // 5. StateManager e ConstraintManager
-        com.graphhopper.jsprit.core.algorithm.state.StateManager stateManager =
-                new com.graphhopper.jsprit.core.algorithm.state.StateManager(problem);
-
-        com.graphhopper.jsprit.core.problem.constraint.ConstraintManager constraintManager =
-                new com.graphhopper.jsprit.core.problem.constraint.ConstraintManager(problem, stateManager);
-
-        // 6. Adicionar SameVehicleConstraint
-        SameVehicleConstraint sameVehicleConstraint = new SameVehicleConstraint(relatedJobs);
-        constraintManager.addConstraint(sameVehicleConstraint);
-
-        stateManager.addStateUpdater(new SameVehicleConstraint.JobAssignmentUpdater(
-                sameVehicleConstraint.getJobToVehicleMap()));
-
-        // 7. Resolver com multi-start
-        return solveWithConstraintMultiStart(problem, stateManager, constraintManager, 2);
-    }
-
-    /**
      * Cria jobs (Delivery e Pickup) para um carrier especifico.
      */
     private void createJobsForCarrier(VehicleRoutingProblem.Builder vrpBuilder,
@@ -792,41 +525,6 @@ public class VrpService {
         }
 
         if (deliveryDemand > 0 && pickupDemand > 0) {
-            relatedJobs.put(dJobId, pJobId);
-            relatedJobs.put(pJobId, dJobId);
-        }
-    }
-
-    /**
-     * Cria jobs COMBINADOS (soma demandas de ambos carriers) para um unico carrier atender.
-     */
-    private void createCombinedJobsForCarrier(VehicleRoutingProblem.Builder vrpBuilder,
-                                               Customer customer, String customerId,
-                                               String assignedCarrier,
-                                               Map<String, String> relatedJobs) {
-        int totalDelivery = customer.getDeliveryDemandForCarrier("1") + customer.getDeliveryDemandForCarrier("2");
-        int totalPickup = customer.getPickupDemandForCarrier("1") + customer.getPickupDemandForCarrier("2");
-
-        String dJobId = "d_" + customerId + "_combined";
-        String pJobId = "p_" + customerId + "_combined";
-
-        if (totalDelivery > 0) {
-            Delivery.Builder builder = Delivery.Builder.newInstance(dJobId);
-            builder.addSizeDimension(0, totalDelivery);
-            builder.setLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(customerId));
-            builder.addRequiredSkill(assignedCarrier);
-            vrpBuilder.addJob(builder.build());
-        }
-
-        if (totalPickup > 0) {
-            Pickup.Builder builder = Pickup.Builder.newInstance(pJobId);
-            builder.addSizeDimension(0, totalPickup);
-            builder.setLocation(com.graphhopper.jsprit.core.problem.Location.newInstance(customerId));
-            builder.addRequiredSkill(assignedCarrier);
-            vrpBuilder.addJob(builder.build());
-        }
-
-        if (totalDelivery > 0 && totalPickup > 0) {
             relatedJobs.put(dJobId, pJobId);
             relatedJobs.put(pJobId, dJobId);
         }
@@ -1066,12 +764,9 @@ public class VrpService {
         return 0;
     }
 
-    // ==================== INICIO V2 (experimental, aditivo) ====================
 
     /**
-     * Versao corrigida do cenario SEM a restricao c8 (run_CEc8).
-     *
-     * Diferencas em relacao a solveWithCustomConstraint:
+     * Resolve o cenario SEM a restricao c8 (run_CEc8), em modo colaborativo.
      *
      * 1. O cliente compartilhado recebe UM PAR DE JOBS POR TRANSPORTADORA, sem
      *    skill restritiva. A escolha de quem o atende passa a ser feita pela
@@ -1088,7 +783,7 @@ public class VrpService {
      *    busca do cenario com simultaneidade (10 partidas), o que torna os dois
      *    cenarios comparaveis.
      */
-    public VrpSolution solveWithCustomConstraintV2(VrpInput input) {
+    public VrpSolution solveWithCustomConstraint(VrpInput input) {
         customerDeliveryDemands.clear();
         customerPickupDemands.clear();
 
@@ -1179,8 +874,7 @@ public class VrpService {
         VehicleRoutingProblemSolution best = solveWithConstraintMultiStart(
                 problem, stateManager, constraintManager, 10, true);
 
-        return mapSolutionCustomMultiStart(best, input.getProblemId(), "V2", compartilhados);
+        return mapSolutionCustomMultiStart(best, input.getProblemId(), "endogena", compartilhados);
     }
 
-    // ==================== FIM V2 ====================
 }

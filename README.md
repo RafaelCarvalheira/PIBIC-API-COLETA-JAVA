@@ -51,13 +51,14 @@ Todos são `POST` sob `/api/solve` e recebem a instância em JSON.
 |---|---|---|
 | `/run-CE` | com simultaneidade, colaborativo | `run_CE` (com a restrição `c8`) |
 | `/run-CE-no-share` | com simultaneidade, sem colaboração | `run_CE_A` + `run_CE_B` |
-| `/run-CEc8-v2` | sem simultaneidade, colaborativo | `run_CEc8` (sem a `c8`) |
+| `/run-CEc8` | sem simultaneidade, colaborativo | `run_CEc8` (sem a `c8`) |
 | `/run-CEc8-no-share` | sem simultaneidade, sem colaboração | — |
-| `/run-CEc8` | *versão anterior do cenário sem simultaneidade* | mantido por histórico |
+
+São os quatro cenários da combinação 2×2 entre simultaneidade e colaboração. O último
+não tem rotina equivalente no modelo exato, logo não dispõe de referência para comparação.
 
 > A nomenclatura vem do modelo exato e é contraintuitiva: **`CEc8` significa "CE *sem* a
-> restrição `c8`"**, ou seja, sem a exigência de visita única. Para o cenário sem
-> simultaneidade, use `/run-CEc8-v2`.
+> restrição `c8`"**, ou seja, sem a exigência de visita única.
 
 ### Como os cenários diferem na modelagem
 
