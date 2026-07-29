@@ -116,11 +116,11 @@ uma.
 |---|---|
 | `dat_to_json_ce.py` | converte as instâncias `.dat` do modelo exato para JSON |
 | `orchestrator_ce.py` | submete o lote de instâncias à API e consolida os resultados |
-| `rodar_lote_v2.py` | executa o lote no cenário sem simultaneidade (retomável) |
-| `analisar_v2.py` | compara os resultados contra a referência exata |
+| `rodar_lote_cec8.py` | executa o lote no cenário sem simultaneidade (retomável) |
+| `analisar_cec8.py` | compara os resultados contra a referência exata |
 | `auditar_visitas.py` | audita quantas transportadoras visitam cada cliente |
 | `auditar_exato_relaxado.py` | mesma auditoria sobre as soluções do modelo exato |
-| `testar_v2.py` | teste de aceitação da modelagem do cenário relaxado |
+| `testar_cec8.py` | teste de aceitação da modelagem do cenário relaxado |
 | `gerar_*.py`, `verificar_latex.py` | geração do relatório final em `.docx` e LaTeX |
 
 ## Resultados

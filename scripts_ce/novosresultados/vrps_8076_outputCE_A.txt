@@ -1,0 +1,28 @@
+Processando o arquivo: D:/rafaelvc/SUPERCODIGO/dados\vrps_8076.dat
+status= OPTIMAL
+ID = 8076
+Numero de clientes = 10
+OF (custo) = 158.93
+Best Objective = 158.93
+Best Bound = 158.92999999999998
+GAP = 0.0%
+x[1, A, A] = 1.0
+x[2, 1, A] = 1.0
+x[7, 2, A] = 1.0
+x[A, 7, A] = 1.0
+z[1, A, A] = 1.0
+z[2, A, A] = 1.0
+z[7, A, A] = 1.0
+l[2, 1, A, 1] = 16.0
+l[7, 2, A, 1] = 16.0
+l[7, 2, A, 2] = 17.0
+l[A, 7, A, 1] = 16.0
+l[A, 7, A, 2] = 17.0
+l[A, 7, A, 7] = 20.0
+m[1, A, A, 1] = 19.0
+m[1, A, A, 2] = 17.0
+m[1, A, A, 7] = 17.0
+m[2, 1, A, 2] = 17.0
+m[2, 1, A, 7] = 17.0
+m[7, 2, A, 7] = 17.0
+Tempo de execução: 0.1757909 segundos
