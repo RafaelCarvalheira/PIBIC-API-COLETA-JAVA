@@ -29,12 +29,10 @@ docs/
 
 # --- instâncias, entradas e saídas dos experimentos ---
 # Regeneráveis a partir dos .dat originais e das execuções da API.
-scripts_ce/dadosmod/
-scripts_ce/outros/
-scripts_ce/json_output_ce/
-scripts_ce/resultados*/
-scripts_ce/verificacao_final/
-scripts_ce/*.xlsx
+# em scripts_ce so os proprios scripts sao versionados; qualquer pasta de
+# dados ou resultado criada depois fica de fora automaticamente
+scripts_ce/*
+!scripts_ce/*.py
 codigo_julia_exato/input/
 codigo_julia_exato/outros/
 codigo_julia_exato/resultados*/
